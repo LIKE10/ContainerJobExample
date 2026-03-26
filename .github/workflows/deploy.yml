@@ -169,8 +169,7 @@ jobs:
                 manualContainerImage="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}" \
                 scheduledContainerImage="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}" \
                 containerRegistryServer="${{ secrets.ACR_LOGIN_SERVER }}" \
-                containerRegistryUsername="${{ secrets.ACR_USERNAME }}" \
-                containerRegistryPassword="${{ secrets.ACR_PASSWORD }}"
+                managedIdentityResourceId="${{ secrets.MANAGED_IDENTITY_RESOURCE_ID }}"
 
       - name: Update ManualExample Container App Job image
         run: |
