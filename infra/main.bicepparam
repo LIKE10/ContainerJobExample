@@ -5,7 +5,7 @@ using './main.bicep'
 // via GitHub Actions secrets or az deployment group create --parameters.
 
 param appName = 'containerjob'
-param location = 'eastus'
+param location = 'canadacentral'
 
 // containerImage, containerRegistryServer, containerRegistryUsername,
 // and containerRegistryPassword are provided at deploy-time by the CI/CD pipeline.
