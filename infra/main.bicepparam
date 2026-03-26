@@ -4,8 +4,9 @@ using './main.bicep'
 // Sensitive parameters (containerRegistryPassword) should be supplied
 // via GitHub Actions secrets or az deployment group create --parameters.
 
-param appName = 'containerjob'
+param appName = 'containerjobexample'
 param location = 'canadacentral'
 
-// containerImage, containerRegistryServer, containerRegistryUsername,
-// and containerRegistryPassword are provided at deploy-time by the CI/CD pipeline.
+// manualContainerImage, scheduledContainerImage, containerRegistryServer,
+// containerRegistryUsername, and containerRegistryPassword are provided
+// at deploy-time by the CI/CD pipeline.

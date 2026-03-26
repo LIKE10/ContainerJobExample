@@ -5,9 +5,12 @@ on:
 
 env:
   DOTNET_VERSION: '10.0.x'
-  PROJECT_PATH: 'src/ContainerJob/ContainerJob.csproj'
-  PUBLISH_OUTPUT: './publish'
-  IMAGE_NAME: 'containerjob'
+  MANUAL_PROJECT_PATH: 'src/ManualExample/ManualExample.csproj'
+  SCHEDULED_PROJECT_PATH: 'src/ScheduledExample/ScheduledExample.csproj'
+  PUBLISH_OUTPUT_MANUAL: './publish-manual'
+  PUBLISH_OUTPUT_SCHEDULED: './publish-scheduled'
+  MANUAL_IMAGE_NAME: 'manualexample'
+  SCHEDULED_IMAGE_NAME: 'scheduledexample'
 
 jobs:
   # ── Step 1: Build ────────────────────────────────────────────────────────────
@@ -25,21 +28,37 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies
-        run: dotnet restore ${{ env.PROJECT_PATH }}
+      - name: Restore dependencies (ManualExample)
+        run: dotnet restore ${{ env.MANUAL_PROJECT_PATH }}
 
-      - name: Publish application
+      - name: Restore dependencies (ScheduledExample)
+        run: dotnet restore ${{ env.SCHEDULED_PROJECT_PATH }}
+
+      - name: Publish ManualExample
         run: |
-          dotnet publish ${{ env.PROJECT_PATH }} \
+          dotnet publish ${{ env.MANUAL_PROJECT_PATH }} \
             --configuration Release \
             --no-restore \
-            --output ${{ env.PUBLISH_OUTPUT }}
+            --output ${{ env.PUBLISH_OUTPUT_MANUAL }}
 
-      - name: Upload publish artifact
+      - name: Publish ScheduledExample
+        run: |
+          dotnet publish ${{ env.SCHEDULED_PROJECT_PATH }} \
+            --configuration Release \
+            --no-restore \
+            --output ${{ env.PUBLISH_OUTPUT_SCHEDULED }}
+
+      - name: Upload ManualExample artifact
         uses: actions/upload-artifact@v4
         with:
-          name: publish
-          path: ${{ env.PUBLISH_OUTPUT }}
+          name: publish-manual
+          path: ${{ env.PUBLISH_OUTPUT_MANUAL }}
+
+      - name: Upload ScheduledExample artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-scheduled
+          path: ${{ env.PUBLISH_OUTPUT_SCHEDULED }}
 
   # ── Step 2: Containerize ─────────────────────────────────────────────────────
   containerize:
@@ -58,24 +77,43 @@ jobs:
         id: meta
         run: echo "image_tag=${{ github.run_id }}" >> "$GITHUB_OUTPUT"
 
-      - name: Build Docker image
+      - name: Build ManualExample Docker image
         run: |
           docker build \
-            --tag ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.image_tag }} \
+            --tag ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ steps.meta.outputs.image_tag }} \
             --file Dockerfile \
             .
 
-      - name: Save Docker image as artifact
+      - name: Build ScheduledExample Docker image
+        run: |
+          docker build \
+            --tag ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ steps.meta.outputs.image_tag }} \
+            --file Dockerfile.scheduled \
+            .
+
+      - name: Save ManualExample Docker image as artifact
         run: |
           docker save \
-            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.image_tag }} \
-            | gzip > image.tar.gz
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ steps.meta.outputs.image_tag }} \
+            | gzip > image-manual.tar.gz
 
-      - name: Upload Docker image artifact
+      - name: Save ScheduledExample Docker image as artifact
+        run: |
+          docker save \
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ steps.meta.outputs.image_tag }} \
+            | gzip > image-scheduled.tar.gz
+
+      - name: Upload ManualExample Docker image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: docker-image
-          path: image.tar.gz
+          name: docker-image-manual
+          path: image-manual.tar.gz
+
+      - name: Upload ScheduledExample Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-scheduled
+          path: image-scheduled.tar.gz
 
   # ── Step 3: Deploy ───────────────────────────────────────────────────────────
   deploy:
@@ -89,10 +127,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Docker image artifact
+      - name: Download ManualExample Docker image artifact
         uses: actions/download-artifact@v4
         with:
-          name: docker-image
+          name: docker-image-manual
+
+      - name: Download ScheduledExample Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-scheduled
 
       - name: Log in to Azure
         uses: azure/login@v2
@@ -103,11 +146,17 @@ jobs:
         run: |
           az acr login --name ${{ secrets.ACR_NAME }}
 
-      - name: Load and push Docker image to ACR
+      - name: Load and push ManualExample Docker image to ACR
         run: |
-          docker load < image.tar.gz
+          docker load < image-manual.tar.gz
           docker push \
-            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}
+
+      - name: Load and push ScheduledExample Docker image to ACR
+        run: |
+          docker load < image-scheduled.tar.gz
+          docker push \
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}
 
       - name: Deploy Bicep infrastructure
         run: |
@@ -117,14 +166,22 @@ jobs:
             --parameters \
                 appName="${{ secrets.APP_NAME }}" \
                 location="${{ secrets.AZURE_LOCATION }}" \
-                containerImage="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}" \
+                manualContainerImage="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}" \
+                scheduledContainerImage="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}" \
                 containerRegistryServer="${{ secrets.ACR_LOGIN_SERVER }}" \
                 containerRegistryUsername="${{ secrets.ACR_USERNAME }}" \
                 containerRegistryPassword="${{ secrets.ACR_PASSWORD }}"
 
-      - name: Update Container App Job image
+      - name: Update ManualExample Container App Job image
         run: |
           az containerapp job update \
-            --name "${{ secrets.APP_NAME }}-job" \
+            --name "${{ secrets.APP_NAME }}-manual-job" \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}"
+            --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}"
+
+      - name: Update ScheduledExample Container App Job image
+        run: |
+          az containerapp job update \
+            --name "${{ secrets.APP_NAME }}-scheduled-job" \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}"

@@ -1,4 +1,4 @@
-using ContainerJob;
+using ScheduledExample;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog;
 using Serilog.Events;
