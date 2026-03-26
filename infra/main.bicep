@@ -13,12 +13,8 @@ param scheduledContainerImage string
 @description('Container registry server (e.g. myacr.azurecr.io)')
 param containerRegistryServer string
 
-@description('Container registry username for pulling images')
-param containerRegistryUsername string
-
-@description('Container registry password for pulling images')
-@secure()
-param containerRegistryPassword string
+@description('Resource ID of the pre-defined user-assigned managed identity that has acrPull permissions on the container registry')
+param managedIdentityResourceId string
 
 @description('Cron expression for the scheduled job (e.g. "0 0 * * *" for daily at midnight UTC)')
 param scheduledJobCron string = '0 0 * * *'
@@ -62,9 +58,15 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01'
 }
 
 // ── Manual Container App Job ─────────────────────────────────────────────────
-resource manualContainerAppJob 'Microsoft.App/jobs@2024-03-01' = {
+resource manualContainerAppJob 'Microsoft.App/jobs@2025-10-02-preview' = {
   name: '${appName}-manual-job'
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentityResourceId}': {}
+    }
+  }
   properties: {
     environmentId: containerAppsEnvironment.id
     configuration: {
@@ -74,15 +76,10 @@ resource manualContainerAppJob 'Microsoft.App/jobs@2024-03-01' = {
       registries: [
         {
           server: containerRegistryServer
-          username: containerRegistryUsername
-          passwordSecretRef: 'registry-password'
+          identity: managedIdentityResourceId
         }
       ]
       secrets: [
-        {
-          name: 'registry-password'
-          value: containerRegistryPassword
-        }
         {
           name: 'appinsights-connection-string'
           value: appInsights.properties.ConnectionString
@@ -111,9 +108,15 @@ resource manualContainerAppJob 'Microsoft.App/jobs@2024-03-01' = {
 }
 
 // ── Scheduled Container App Job ──────────────────────────────────────────────
-resource scheduledContainerAppJob 'Microsoft.App/jobs@2024-03-01' = {
+resource scheduledContainerAppJob 'Microsoft.App/jobs@2025-10-02-preview' = {
   name: '${appName}-scheduled-job'
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentityResourceId}': {}
+    }
+  }
   properties: {
     environmentId: containerAppsEnvironment.id
     configuration: {
@@ -128,15 +131,10 @@ resource scheduledContainerAppJob 'Microsoft.App/jobs@2024-03-01' = {
       registries: [
         {
           server: containerRegistryServer
-          username: containerRegistryUsername
-          passwordSecretRef: 'registry-password'
+          identity: managedIdentityResourceId
         }
       ]
       secrets: [
-        {
-          name: 'registry-password'
-          value: containerRegistryPassword
-        }
         {
           name: 'appinsights-connection-string'
           value: appInsights.properties.ConnectionString
