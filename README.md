@@ -1,6 +1,11 @@
 # ContainerJobExample
 
-A .NET Worker Service packaged as a Docker container and deployed to **Azure Container Apps Jobs**. The job runs on-demand (manual trigger), executes a short-lived workload, and ships structured logs to **Application Insights** via Serilog.
+A collection of .NET Worker Services packaged as Docker containers and deployed to **Azure Container Apps Jobs**. Each example demonstrates a different job trigger type and ships structured logs to **Application Insights** via Serilog.
+
+| Example | Trigger | Description |
+|---------|---------|-------------|
+| **ManualExample** | Manual | Triggered on-demand via the Azure Portal or CLI |
+| **ScheduledExample** | Schedule (cron) | Triggered automatically on a recurring cron schedule |
 
 ---
 
@@ -8,18 +13,23 @@ A .NET Worker Service packaged as a Docker container and deployed to **Azure Con
 
 ```
 ContainerJobExample/
-├── Dockerfile                    # Multi-stage Docker build (SDK → runtime)
+├── Dockerfile                       # Multi-stage Docker build for ManualExample
+├── Dockerfile.scheduled             # Multi-stage Docker build for ScheduledExample
 ├── infra/
-│   ├── main.bicep                # Bicep template – Log Analytics, App Insights, Container Apps Env, Job
-│   └── main.bicepparam           # Default parameter values (region, app name)
+│   ├── main.bicep                   # Bicep template – Log Analytics, App Insights, Container Apps Env, both Jobs
+│   └── main.bicepparam              # Default parameter values (region, app name)
 ├── src/
-│   └── ContainerJob/
-│       ├── ContainerJob.csproj   # .NET 10 Worker Service project
-│       ├── Program.cs            # Host setup with Serilog + Application Insights
-│       └── Worker.cs             # BackgroundService that runs the job logic
+│   ├── ManualExample/
+│   │   ├── ManualExample.csproj     # .NET 10 Worker Service project
+│   │   ├── Program.cs               # Host setup with Serilog + Application Insights
+│   │   └── Worker.cs                # BackgroundService that runs the manual job logic
+│   └── ScheduledExample/
+│       ├── ScheduledExample.csproj  # .NET 10 Worker Service project
+│       ├── Program.cs               # Host setup with Serilog + Application Insights
+│       └── Worker.cs                # BackgroundService that runs the scheduled job logic
 └── .github/
     └── workflows/
-        └── deploy.yml            # CI/CD: build → containerize → deploy
+        └── deploy.yml               # CI/CD: build → containerize → deploy (both examples)
 ```
 
 ---
@@ -43,14 +53,16 @@ An **Azure subscription** with an existing resource group and an **Azure Contain
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `appName` | `containerjob` | Base name used to derive all Azure resource names |
+| `appName` | `containerjobexample` | Base name used to derive all Azure resource names |
 | `location` | `canadacentral` | Azure region for all resources |
+| `scheduledJobCron` | `0 0 * * *` | Cron expression for the scheduled job (default: daily at midnight UTC) |
 
 The following parameters are **not** stored in the param file and must be supplied at deploy time (see CI/CD section below):
 
 | Parameter | Description |
 |-----------|-------------|
-| `containerImage` | Full image reference, e.g. `myacr.azurecr.io/containerjob:run-123` |
+| `manualContainerImage` | Full image reference for the manual job, e.g. `myacr.azurecr.io/manualexample:run-123` |
+| `scheduledContainerImage` | Full image reference for the scheduled job, e.g. `myacr.azurecr.io/scheduledexample:run-123` |
 | `containerRegistryServer` | ACR login server, e.g. `myacr.azurecr.io` |
 | `containerRegistryUsername` | ACR username |
 | `containerRegistryPassword` | ACR password (marked `@secure()`) |
@@ -75,18 +87,25 @@ Configure the following secrets in **Settings → Secrets and variables → Acti
 ## Local Development
 
 ```bash
-# Restore dependencies
-dotnet restore src/ContainerJob/ContainerJob.csproj
+# Restore and run ManualExample locally
+dotnet restore src/ManualExample/ManualExample.csproj
+dotnet run --project src/ManualExample/ManualExample.csproj
 
-# Run locally
-dotnet run --project src/ContainerJob/ContainerJob.csproj
+# Restore and run ScheduledExample locally
+dotnet restore src/ScheduledExample/ScheduledExample.csproj
+dotnet run --project src/ScheduledExample/ScheduledExample.csproj
 ```
 
-### Build & run the Docker image locally
+### Build & run the Docker images locally
 
 ```bash
-docker build --tag containerjob:local .
-docker run --rm containerjob:local
+# ManualExample
+docker build --tag manualexample:local --file Dockerfile .
+docker run --rm manualexample:local
+
+# ScheduledExample
+docker build --tag scheduledexample:local --file Dockerfile.scheduled .
+docker run --rm scheduledexample:local
 ```
 
 ---
@@ -99,7 +118,8 @@ az deployment group create \
   --template-file infra/main.bicep \
   --parameters infra/main.bicepparam \
   --parameters \
-      containerImage="<acr>.azurecr.io/containerjob:<tag>" \
+      manualContainerImage="<acr>.azurecr.io/manualexample:<tag>" \
+      scheduledContainerImage="<acr>.azurecr.io/scheduledexample:<tag>" \
       containerRegistryServer="<acr>.azurecr.io" \
       containerRegistryUsername="<username>" \
       containerRegistryPassword="<password>"
@@ -111,18 +131,30 @@ az deployment group create \
 
 The workflow at `.github/workflows/deploy.yml` is triggered manually (`workflow_dispatch`) and runs three sequential jobs:
 
-1. **Build** – restores and publishes the .NET project, uploads the artifact.
-2. **Containerize** – builds the Docker image tagged with the GitHub run ID and saves it as an artifact.
-3. **Deploy** – logs in to Azure and ACR, pushes the image, deploys the Bicep template, then updates the Container App Job to use the new image.
+1. **Build** – restores and publishes both .NET projects, uploads the artifacts.
+2. **Containerize** – builds Docker images for both examples (tagged with the GitHub run ID) and saves them as artifacts.
+3. **Deploy** – logs in to Azure and ACR, pushes both images, deploys the Bicep template, then updates both Container App Jobs to use the new images.
 
 ---
 
-## Running the Job
+## Running the Jobs
 
-After deployment, trigger the job from the Azure Portal or via the Azure CLI:
+### ManualExample
+
+After deployment, trigger the manual job from the Azure Portal or via the Azure CLI:
 
 ```bash
 az containerapp job start \
-  --name <appName>-job \
+  --name <appName>-manual-job \
+  --resource-group <your-resource-group>
+```
+
+### ScheduledExample
+
+The scheduled job runs automatically according to the `scheduledJobCron` parameter (default: daily at midnight UTC). You can also trigger it manually:
+
+```bash
+az containerapp job start \
+  --name <appName>-scheduled-job \
   --resource-group <your-resource-group>
 ```

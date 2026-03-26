@@ -1,4 +1,4 @@
-namespace ContainerJob;
+namespace ScheduledExample;
 
 public class Worker : BackgroundService
 {
@@ -15,19 +15,19 @@ public class Worker : BackgroundService
     {
         try
         {
-            _logger.LogInformation("Container job started at {Time}", DateTimeOffset.UtcNow);
+            _logger.LogInformation("Scheduled job started at {Time}", DateTimeOffset.UtcNow);
 
             await DoWorkAsync(stoppingToken);
 
-            _logger.LogInformation("Container job completed successfully at {Time}", DateTimeOffset.UtcNow);
+            _logger.LogInformation("Scheduled job completed successfully at {Time}", DateTimeOffset.UtcNow);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Container job was cancelled");
+            _logger.LogWarning("Scheduled job was cancelled");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Container job failed with an unhandled exception");
+            _logger.LogError(ex, "Scheduled job failed with an unhandled exception");
             throw;
         }
         finally
@@ -38,11 +38,11 @@ public class Worker : BackgroundService
 
     private async Task DoWorkAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Executing job work item");
+        _logger.LogInformation("Executing scheduled job work item");
 
-        // Simulate workload — replace with real business logic
+        // Simulate scheduled workload — replace with real business logic (e.g. nightly cleanup, report generation)
         await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
 
-        _logger.LogInformation("Job work item completed");
+        _logger.LogInformation("Scheduled job work item completed");
     }
 }

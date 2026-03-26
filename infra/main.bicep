@@ -4,8 +4,11 @@ param location string = resourceGroup().location
 @description('Base name used to derive all resource names')
 param appName string
 
-@description('Container image reference (e.g. myacr.azurecr.io/containerjob:run-123)')
-param containerImage string
+@description('Container image reference for the manual job (e.g. myacr.azurecr.io/manualexample:run-123)')
+param manualContainerImage string
+
+@description('Container image reference for the scheduled job (e.g. myacr.azurecr.io/scheduledexample:run-123)')
+param scheduledContainerImage string
 
 @description('Container registry server (e.g. myacr.azurecr.io)')
 param containerRegistryServer string
@@ -16,6 +19,9 @@ param containerRegistryUsername string
 @description('Container registry password for pulling images')
 @secure()
 param containerRegistryPassword string
+
+@description('Cron expression for the scheduled job (e.g. "0 0 * * *" for daily at midnight UTC)')
+param scheduledJobCron string = '0 0 * * *'
 
 // ── Log Analytics Workspace ──────────────────────────────────────────────────
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
@@ -55,9 +61,9 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01'
   }
 }
 
-// ── Container App Job ────────────────────────────────────────────────────────
-resource containerAppJob 'Microsoft.App/jobs@2024-03-01' = {
-  name: '${appName}-job'
+// ── Manual Container App Job ─────────────────────────────────────────────────
+resource manualContainerAppJob 'Microsoft.App/jobs@2024-03-01' = {
+  name: '${appName}-manual-job'
   location: location
   properties: {
     environmentId: containerAppsEnvironment.id
@@ -86,8 +92,62 @@ resource containerAppJob 'Microsoft.App/jobs@2024-03-01' = {
     template: {
       containers: [
         {
-          name: 'containerjob'
-          image: containerImage
+          name: 'manualexample'
+          image: manualContainerImage
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+          env: [
+            {
+              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+              secretRef: 'appinsights-connection-string'
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+
+// ── Scheduled Container App Job ──────────────────────────────────────────────
+resource scheduledContainerAppJob 'Microsoft.App/jobs@2024-03-01' = {
+  name: '${appName}-scheduled-job'
+  location: location
+  properties: {
+    environmentId: containerAppsEnvironment.id
+    configuration: {
+      triggerType: 'Schedule'
+      replicaTimeout: 600
+      replicaRetryLimit: 1
+      scheduleTriggerConfig: {
+        cronExpression: scheduledJobCron
+        parallelism: 1
+        replicaCompletionCount: 1
+      }
+      registries: [
+        {
+          server: containerRegistryServer
+          username: containerRegistryUsername
+          passwordSecretRef: 'registry-password'
+        }
+      ]
+      secrets: [
+        {
+          name: 'registry-password'
+          value: containerRegistryPassword
+        }
+        {
+          name: 'appinsights-connection-string'
+          value: appInsights.properties.ConnectionString
+        }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          name: 'scheduledexample'
+          image: scheduledContainerImage
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
@@ -106,5 +166,6 @@ resource containerAppJob 'Microsoft.App/jobs@2024-03-01' = {
 
 // ── Outputs ───────────────────────────────────────────────────────────────────
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
-output containerAppJobName string = containerAppJob.name
+output manualContainerAppJobName string = manualContainerAppJob.name
+output scheduledContainerAppJobName string = scheduledContainerAppJob.name
 output containerAppsEnvironmentName string = containerAppsEnvironment.name

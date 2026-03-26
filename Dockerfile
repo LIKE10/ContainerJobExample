@@ -2,11 +2,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY src/ContainerJob/ContainerJob.csproj ./ContainerJob/
-RUN dotnet restore ./ContainerJob/ContainerJob.csproj
+COPY src/ManualExample/ManualExample.csproj ./ManualExample/
+RUN dotnet restore ./ManualExample/ManualExample.csproj
 
-COPY src/ContainerJob/ ./ContainerJob/
-RUN dotnet publish ./ContainerJob/ContainerJob.csproj \
+COPY src/ManualExample/ ./ManualExample/
+RUN dotnet publish ./ManualExample/ManualExample.csproj \
     --configuration Release \
     --no-restore \
     --output /app/publish
@@ -17,4 +17,4 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
-ENTRYPOINT ["dotnet", "ContainerJob.dll"]
+ENTRYPOINT ["dotnet", "ManualExample.dll"]
