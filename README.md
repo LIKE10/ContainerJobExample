@@ -64,8 +64,7 @@ The following parameters are **not** stored in the param file and must be suppli
 | `manualContainerImage` | Full image reference for the manual job, e.g. `myacr.azurecr.io/manualexample:run-123` |
 | `scheduledContainerImage` | Full image reference for the scheduled job, e.g. `myacr.azurecr.io/scheduledexample:run-123` |
 | `containerRegistryServer` | ACR login server, e.g. `myacr.azurecr.io` |
-| `containerRegistryUsername` | ACR username |
-| `containerRegistryPassword` | ACR password (marked `@secure()`) |
+| `managedIdentityResourceId` | Full resource ID of a pre-existing user-assigned managed identity that has `acrPull` permissions on the registry |
 
 ### GitHub Actions secrets
 
@@ -79,8 +78,7 @@ Configure the following secrets in **Settings → Secrets and variables → Acti
 | `APP_NAME` | Application base name (must match `appName` in the param file) |
 | `ACR_NAME` | ACR resource name (without `.azurecr.io`) |
 | `ACR_LOGIN_SERVER` | ACR login server, e.g. `myacr.azurecr.io` |
-| `ACR_USERNAME` | ACR username |
-| `ACR_PASSWORD` | ACR password |
+| `MANAGED_IDENTITY_RESOURCE_ID` | Full resource ID of the user-assigned managed identity used for ACR authentication |
 
 ---
 
@@ -121,8 +119,7 @@ az deployment group create \
       manualContainerImage="<acr>.azurecr.io/manualexample:<tag>" \
       scheduledContainerImage="<acr>.azurecr.io/scheduledexample:<tag>" \
       containerRegistryServer="<acr>.azurecr.io" \
-      containerRegistryUsername="<username>" \
-      containerRegistryPassword="<password>"
+      managedIdentityResourceId="<managed-identity-resource-id>"
 ```
 
 ---
