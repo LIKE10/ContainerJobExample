@@ -65,21 +65,27 @@ public class Worker : BackgroundService
             AccessToken token = credential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
             string rawToken = token.Token;
 
-            _logger.LogInformation("--- Raw Token ---");
-
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(rawToken);
 
-            _logger.LogInformation("--- Decoded Token Contents ---");
-            _logger.LogInformation("Header:  {SerializeToJson}", jwtToken.Header.SerializeToJson());
-            _logger.LogInformation("Issuer:  {JwtTokenIssuer}", jwtToken.Issuer);
-            _logger.LogInformation("Subject: {JwtTokenSubject}", jwtToken.Subject);
-            _logger.LogInformation("Expires: {JwtTokenValidTo} (UTC)", jwtToken.ValidTo);
+            // Always log only non-sensitive metadata
+            _logger.LogInformation("Acquired token that expires at {JwtTokenValidTo} (UTC)", jwtToken.ValidTo);
 
-            _logger.LogInformation("--- Claims ---");
-            foreach (var claim in jwtToken.Claims)
+            // Optional, gated, and redacted token introspection for debugging purposes only
+            var enableTokenLogging = string.Equals(
+                Environment.GetEnvironmentVariable("ENABLE_TOKEN_LOGGING"),
+                "true",
+                StringComparison.OrdinalIgnoreCase);
+
+            if (enableTokenLogging)
             {
-                _logger.LogInformation("{ClaimType}: {ClaimValue}", claim.Type, claim.Value);
+                _logger.LogDebug("--- Token Debug Information (redacted) ---");
+                var claimTypes = jwtToken.Claims.Select(c => c.Type).Distinct().ToArray();
+                _logger.LogDebug("Token contains {ClaimCount} claims of types: {ClaimTypes}", claimTypes.Length, claimTypes);
+            }
+            else
+            {
+                _logger.LogDebug("Detailed token logging is disabled. Set ENABLE_TOKEN_LOGGING=true to enable redacted token diagnostics.");
             }
         }
         catch (AuthenticationFailedException e)
