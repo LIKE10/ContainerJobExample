@@ -84,7 +84,8 @@ public class Worker : BackgroundService
         }
         catch (AuthenticationFailedException e)
         {
-            _logger.LogError("Authentication Failed: {EMessage}", e.Message);
+            _logger.LogError(e, "Authentication failed while fetching token from Azure Identity endpoint.");
+            throw;
         }
     }
     
