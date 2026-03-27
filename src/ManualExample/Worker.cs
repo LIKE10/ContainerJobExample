@@ -1,3 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
+using Azure.Core;
+using Azure.Identity;
+
 namespace ManualExample;
 
 public class Worker : BackgroundService
@@ -36,10 +40,67 @@ public class Worker : BackgroundService
         }
     }
 
+    private void DumpEnvironment()
+    {
+        var envVars = Environment.GetEnvironmentVariables()
+            .Cast<System.Collections.DictionaryEntry>()
+            .OrderBy(e => e.Key.ToString());
+
+        foreach (var entry in envVars)
+        {
+            _logger.LogInformation("{Key} = {Value}", entry.Key, entry.Value);
+        }
+    }
+
+    private void DumpCredentials()
+    {
+        var credential = new DefaultAzureCredential();
+        var tokenRequestContext = new TokenRequestContext(["https://management.azure.com/.default"]);
+        
+        try
+        {
+            _logger.LogDebug("Fetching token from Azure Identity endpoint...");
+    
+            AccessToken token = credential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
+            string rawToken = token.Token;
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(rawToken);
+
+            // Always log only non-sensitive metadata
+            _logger.LogInformation("Acquired token that expires at {JwtTokenValidTo} (UTC)", jwtToken.ValidTo);
+
+            // Optional, gated, and redacted token introspection for debugging purposes only
+            var enableTokenLogging = string.Equals(
+                Environment.GetEnvironmentVariable("ENABLE_TOKEN_LOGGING"),
+                "true",
+                StringComparison.OrdinalIgnoreCase);
+
+            if (enableTokenLogging)
+            {
+                _logger.LogDebug("--- Token Debug Information (redacted) ---");
+                var claimTypes = jwtToken.Claims.Select(c => c.Type).Distinct().ToArray();
+                _logger.LogDebug("Token contains {ClaimCount} claims of types: {ClaimTypes}", claimTypes.Length, claimTypes);
+            }
+            else
+            {
+                _logger.LogDebug("Detailed token logging is disabled. Set ENABLE_TOKEN_LOGGING=true to enable redacted token diagnostics.");
+            }
+        }
+        catch (AuthenticationFailedException e)
+        {
+            _logger.LogError(e, "Authentication failed while fetching token from Azure Identity endpoint.");
+            throw;
+        }
+    }
+    
     private async Task DoWorkAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Executing manual job work item");
 
+        DumpEnvironment();
+        DumpCredentials();  
+        
         // Simulate workload — replace with real business logic
         await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
 
