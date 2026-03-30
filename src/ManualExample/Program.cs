@@ -20,8 +20,9 @@ builder.Services.AddSerilog((services, loggerConfig) =>
         .MinimumLevel.Information()
         .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
         .Enrich.FromLogContext()
+        .Enrich.WithProperty("ExecutionId", "none")
         .WriteTo.Console(
-            outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+            outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{ExecutionId}] {Message:lj}{NewLine}{Exception}")
         .WriteTo.ApplicationInsights(
             telemetryConfiguration,
             TelemetryConverter.Traces);

@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using Azure.Core;
 using Azure.Identity;
+using Serilog.Context;
 
 namespace ManualExample;
 
@@ -17,9 +18,12 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var executionId = Guid.NewGuid().ToString();
+        using var executionIdContext = LogContext.PushProperty("ExecutionId", executionId);
+
         try
         {
-            _logger.LogInformation("Manual job started at {Time}", DateTimeOffset.UtcNow);
+            _logger.LogInformation("Manual job started. ExecutionId: {ExecutionId}, Time: {Time}", executionId, DateTimeOffset.UtcNow);
 
             await DoWorkAsync(stoppingToken);
 
