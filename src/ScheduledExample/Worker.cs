@@ -1,3 +1,5 @@
+using Serilog.Context;
+
 namespace ScheduledExample;
 
 public class Worker : BackgroundService
@@ -13,9 +15,12 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var executionId = Guid.NewGuid().ToString();
+        using var executionIdContext = LogContext.PushProperty("ExecutionId", executionId);
+
         try
         {
-            _logger.LogInformation("Scheduled job started at {Time}", DateTimeOffset.UtcNow);
+            _logger.LogInformation("Scheduled job started. ExecutionId: {ExecutionId}, Time: {Time}", executionId, DateTimeOffset.UtcNow);
             _logger.LogInformation("Running scheduled job as identity: {0}", Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"));
 
 
