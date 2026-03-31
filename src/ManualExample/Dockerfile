@@ -2,11 +2,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY src/ManualExample/ManualExample.csproj ./ManualExample/
-RUN dotnet restore ./ManualExample/ManualExample.csproj
+COPY ManualExample.csproj .
+RUN dotnet restore ManualExample.csproj
 
-COPY src/ManualExample/ ./ManualExample/
-RUN dotnet publish ./ManualExample/ManualExample.csproj \
+COPY . .
+RUN dotnet publish ManualExample.csproj \
     --configuration Release \
     --no-restore \
     --output /app/publish
