@@ -2,11 +2,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY src/ScheduledExample/ScheduledExample.csproj ./ScheduledExample/
-RUN dotnet restore ./ScheduledExample/ScheduledExample.csproj
+COPY ScheduledExample.csproj .
+RUN dotnet restore ScheduledExample.csproj
 
-COPY src/ScheduledExample/ ./ScheduledExample/
-RUN dotnet publish ./ScheduledExample/ScheduledExample.csproj \
+COPY . .
+RUN dotnet publish ScheduledExample.csproj \
     --configuration Release \
     --no-restore \
     --output /app/publish
