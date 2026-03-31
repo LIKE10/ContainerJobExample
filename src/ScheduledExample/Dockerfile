@@ -2,11 +2,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0-azurelinux3.0 AS build
 WORKDIR /src
 
-COPY src/ManualExample/ManualExample.csproj ./ManualExample/
-RUN dotnet restore ./ManualExample/ManualExample.csproj
+COPY ScheduledExample.csproj .
+RUN dotnet restore ScheduledExample.csproj
 
-COPY src/ManualExample/ ./ManualExample/
-RUN dotnet publish ./ManualExample/ManualExample.csproj \
+COPY . .
+RUN dotnet publish ScheduledExample.csproj \
     --configuration Release \
     --no-restore \
     --output /app/publish
@@ -17,4 +17,4 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
-ENTRYPOINT ["dotnet", "ManualExample.dll"]
+ENTRYPOINT ["dotnet", "ScheduledExample.dll"]

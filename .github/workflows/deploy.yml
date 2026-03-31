@@ -81,15 +81,13 @@ jobs:
         run: |
           docker build \
             --tag ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ steps.meta.outputs.image_tag }} \
-            --file Dockerfile \
-            .
+            src/ManualExample
 
       - name: Build ScheduledExample Docker image
         run: |
           docker build \
             --tag ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ steps.meta.outputs.image_tag }} \
-            --file Dockerfile.scheduled \
-            .
+            src/ScheduledExample
 
       - name: Save ManualExample Docker image as artifact
         run: |
