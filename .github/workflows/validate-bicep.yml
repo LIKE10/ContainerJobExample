@@ -18,10 +18,15 @@ jobs:
 
       - name: Run Bicep linter
         run: |
+          az bicep lint --file infra/acr.bicep
           az bicep lint --file infra/main.bicep
           az bicep lint --file infra/prereqs.bicep
+          az bicep lint --file infra/container-job.bicep
 
       - name: Build Bicep to ARM
         run: |
+          az bicep build --file infra/acr.bicep
           az bicep build --file infra/main.bicep
           az bicep build --file infra/prereqs.bicep
+          az bicep build --file infra/container-job.bicep
+
