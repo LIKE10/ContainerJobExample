@@ -43,7 +43,7 @@ ContainerJobExample/
 | [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) | 2.60+ |
 | [Bicep CLI](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install) | 0.27+ |
 
-An **Azure subscription** with an existing resource group and an **Azure Container Registry (ACR)** are also required.
+An **Azure subscription** is also required. You can deploy the Azure Container Registry and its dedicated resource group with [infra/acr.bicep](infra/acr.bicep).
 
 ---
 
@@ -109,6 +109,26 @@ docker run --rm scheduledexample:local
 ---
 
 ## Infrastructure Deployment (manual)
+
+Create the dedicated ACR resource group and registry first:
+
+```bash
+az deployment sub create \
+  --location canadacentral \
+  --template-file infra/acr.bicep \
+  --parameters infra/acr.bicepparam
+```
+
+Then deploy prerequisites (managed identity, role assignment, and shared resources):
+
+```bash
+az deployment sub create \
+  --location canadacentral \
+  --template-file infra/prereqs.bicep \
+  --parameters infra/prereqs.bicepparam
+```
+
+Finally, deploy the Container Apps jobs into your application resource group:
 
 ```bash
 az deployment group create \

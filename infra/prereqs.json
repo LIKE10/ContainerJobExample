@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.41.2.15936",
-      "templateHash": "6354421815297019786"
+      "version": "0.42.1.51946",
+      "templateHash": "14757506784939761640"
     }
   },
   "parameters": {
@@ -65,8 +65,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.41.2.15936",
-              "templateHash": "6737527938739831631"
+              "version": "0.42.1.51946",
+              "templateHash": "6174265851742533095"
             }
           },
           "parameters": {
@@ -191,8 +191,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.41.2.15936",
-              "templateHash": "15208344444000838100"
+              "version": "0.42.1.51946",
+              "templateHash": "1299832362528176206"
             }
           },
           "parameters": {
@@ -216,7 +216,6 @@
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]",
               "name": "[guid(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), parameters('managedIdentityPrincipalId'), variables('acrPullRoleDefinitionId'))]",
               "properties": {
                 "principalId": "[parameters('managedIdentityPrincipalId')]",
