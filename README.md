@@ -66,6 +66,27 @@ The following parameters are **not** stored in the param file and must be suppli
 | `containerRegistryServer` | ACR login server, e.g. `myacr.azurecr.io` |
 | `managedIdentityResourceId` | Full resource ID of a pre-existing user-assigned managed identity that has `acrPull` permissions on the registry |
 
+### Optional: select a specific user-assigned managed identity
+
+The worker apps support an optional `AZURE_CLIENT_ID` environment variable:
+
+- If `AZURE_CLIENT_ID` is not set, the app uses the default runtime managed identity.
+- If `AZURE_CLIENT_ID` is set, the app authenticates with that specific user-assigned managed identity.
+
+Set this value on both Container App Jobs if you need to pin the identity explicitly:
+
+```bash
+az containerapp job update \
+  --name <appName>-manual-job \
+  --resource-group <your-resource-group> \
+  --set-env-vars AZURE_CLIENT_ID=<user-assigned-managed-identity-client-id>
+
+az containerapp job update \
+  --name <appName>-scheduled-job \
+  --resource-group <your-resource-group> \
+  --set-env-vars AZURE_CLIENT_ID=<user-assigned-managed-identity-client-id>
+```
+
 ### GitHub Actions secrets
 
 Configure the following secrets in **Settings → Secrets and variables → Actions** on the repository:
