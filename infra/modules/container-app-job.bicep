@@ -97,6 +97,10 @@ resource containerAppJob 'Microsoft.App/jobs@2025-10-02-preview' = {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               secretRef: 'appinsights-connection-string'
             }
+            {
+              name: 'AZURE_CLIENT_ID'
+              value: userIdentity.properties.clientId
+            }
           ]
         }
       ]
