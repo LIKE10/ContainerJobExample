@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "11336461799529904260"
+      "templateHash": "14506485198188175804"
     }
   },
   "parameters": {
@@ -146,7 +146,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "16683529623485384538"
+              "templateHash": "5487286947405148026"
             }
           },
           "parameters": {
@@ -290,6 +290,10 @@
                         {
                           "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
                           "secretRef": "appinsights-connection-string"
+                        },
+                        {
+                          "name": "AZURE_CLIENT_ID",
+                          "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName')), '2023-01-31').clientId]"
                         }
                       ]
                     }
