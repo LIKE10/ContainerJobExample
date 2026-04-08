@@ -175,6 +175,44 @@ The workflow at `.github/workflows/deploy.yml` is triggered manually (`workflow_
 
 ---
 
+## Deploying the images
+
+# Login to ACR
+```
+az acr login --name containerjobexampleacr --resource-group containerjobexampleacr-rg
+```
+
+# Build and push images
+```
+docker build -t containerjobexampleacr.azurecr.io/manualexample:latest -f Dockerfile .
+docker build -t containerjobexampleacr.azurecr.io/scheduledexample:latest -f Dockerfile.scheduled .
+docker push containerjobexampleacr.azurecr.io/manualexample:latest
+docker push containerjobexampleacr.azurecr.io/scheduledexample:latest
+```
+
+# Deploy jobs
+
+```
+az deployment group create \
+  --resource-group containerjobexampler-rg \
+  --template-file infra/container-job.bicep \
+  --parameters infra/container-job.bicepparam \
+  --parameters containerImage='containerjobexampleacr.azurecr.io/manualexample:latest' \
+  --parameters jobName='containerjobmanual-job' \
+  --parameters containerName='manualcontainerjob' \
+
+az deployment group create \
+  --resource-group containerjobexampler-rg \
+  --template-file infra/container-job.bicep \
+  --parameters infra/container-job.bicepparam \
+  --parameters containerImage='containerjobexampleacr.azurecr.io/scheduledexample:latest' \
+  --parameters triggerType='Schedule' \
+  --parameters jobName='containerjobschedule-job' \
+  --parameters containerName='schedulecontainerjob' \
+
+
+```
+
 ## Running the Jobs
 
 ### ManualExample

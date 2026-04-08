@@ -1,12 +1,13 @@
 using './container-job.bicep'
 
 param jobName = 'containerjobexample-job'
-param containerName = 'mycontainerjob'
+param containerName = 'examplecontainerjob'
 
 // These parameters are provided at deploy-time by the CI/CD pipeline
 // or via az deployment group create --parameters.
 //
-param containerImage = 'containerjobexampleacr.azurecr.io/ManualExample:latest'
+
+param containerImage = 'containerjobexampleacr.azurecr.io/manualexample:latest'
 param containerRegistryServer = 'containerjobexampleacr.azurecr.io'
 param managedIdentityName = 'containerjobexampler-id'
 param containerAppsEnvironmentId = '/subscriptions/30f38ab2-a851-4c7c-9203-d761be7c5102/resourceGroups/containerjobexampler-rg/providers/Microsoft.App/managedEnvironments/containerjobexampler-env'
