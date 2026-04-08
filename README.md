@@ -193,22 +193,22 @@ docker push containerjobexampleacr.azurecr.io/scheduledexample:latest
 # Deploy jobs
 
 ```
-az deployment group create \
-  --resource-group containerjobexampler-rg \
-  --template-file infra/container-job.bicep \
-  --parameters infra/container-job.bicepparam \
-  --parameters containerImage='containerjobexampleacr.azurecr.io/manualexample:latest' \
-  --parameters jobName='containerjobmanual-job' \
-  --parameters containerName='manualcontainerjob' \
+az deployment group create `
+  --resource-group containerjobexampler-rg `
+  --template-file infra/container-job.bicep `
+  --parameters infra/container-job.bicepparam `
+  --parameters containerImage='containerjobexampleacr.azurecr.io/manualexample:latest' `
+  --parameters jobName='containerjobmanual-job' `
+  --parameters containerName='manualcontainerjob' 
 
-az deployment group create \
-  --resource-group containerjobexampler-rg \
-  --template-file infra/container-job.bicep \
-  --parameters infra/container-job.bicepparam \
-  --parameters containerImage='containerjobexampleacr.azurecr.io/scheduledexample:latest' \
-  --parameters triggerType='Schedule' \
-  --parameters jobName='containerjobschedule-job' \
-  --parameters containerName='schedulecontainerjob' \
+az deployment group create `
+  --resource-group containerjobexampler-rg `
+  --template-file infra/container-job.bicep `
+  --parameters infra/container-job.bicepparam `
+  --parameters containerImage='containerjobexampleacr.azurecr.io/scheduledexample:latest' `
+  --parameters triggerType='Schedule' `
+  --parameters jobName='containerjobschedule-job' `
+  --parameters containerName='schedulecontainerjob' 
 
 
 ```
