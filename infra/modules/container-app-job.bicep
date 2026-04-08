@@ -16,8 +16,8 @@ param containerName string
 @description('Container registry server (e.g. myacr.azurecr.io)')
 param containerRegistryServer string
 
-@description('Resource ID of the user-assigned managed identity with acrPull permissions')
-param managedIdentityResourceId string
+@description('Name of the user-assigned managed identity with acrPull permissions')
+param managedIdentityName string
 
 @description('Application Insights connection string')
 @secure()
@@ -45,6 +45,10 @@ param replicaTimeout int = 600
 @description('Maximum number of retries for a failed replica')
 param replicaRetryLimit int = 1
 
+resource userIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: managedIdentityName
+}
+
 // ── Container App Job ───────────────────────────────────────────────────────
 resource containerAppJob 'Microsoft.App/jobs@2025-10-02-preview' = {
   name: jobName
@@ -52,7 +56,7 @@ resource containerAppJob 'Microsoft.App/jobs@2025-10-02-preview' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${managedIdentityResourceId}': {}
+      '${userIdentity.id}': {}
     }
   }
   properties: {
@@ -69,7 +73,7 @@ resource containerAppJob 'Microsoft.App/jobs@2025-10-02-preview' = {
       registries: [
         {
           server: containerRegistryServer
-          identity: managedIdentityResourceId
+          identity: userIdentity.id
         }
       ]
       secrets: [

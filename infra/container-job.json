@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.41.2.15936",
-      "templateHash": "16718130057751590129"
+      "version": "0.42.1.51946",
+      "templateHash": "11336461799529904260"
     }
   },
   "parameters": {
@@ -40,10 +40,10 @@
         "description": "Container registry server (e.g. myacr.azurecr.io)"
       }
     },
-    "managedIdentityResourceId": {
+    "managedIdentityName": {
       "type": "string",
       "metadata": {
-        "description": "Resource ID of the user-assigned managed identity with acrPull permissions"
+        "description": "Name of the user-assigned managed identity with acrPull permissions"
       }
     },
     "containerAppsEnvironmentId": {
@@ -120,8 +120,8 @@
           "containerRegistryServer": {
             "value": "[parameters('containerRegistryServer')]"
           },
-          "managedIdentityResourceId": {
-            "value": "[parameters('managedIdentityResourceId')]"
+          "managedIdentityName": {
+            "value": "[parameters('managedIdentityName')]"
           },
           "appInsightsConnectionString": {
             "value": "[parameters('appInsightsConnectionString')]"
@@ -145,8 +145,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.41.2.15936",
-              "templateHash": "7521164933682344017"
+              "version": "0.42.1.51946",
+              "templateHash": "16683529623485384538"
             }
           },
           "parameters": {
@@ -186,10 +186,10 @@
                 "description": "Container registry server (e.g. myacr.azurecr.io)"
               }
             },
-            "managedIdentityResourceId": {
+            "managedIdentityName": {
               "type": "string",
               "metadata": {
-                "description": "Resource ID of the user-assigned managed identity with acrPull permissions"
+                "description": "Name of the user-assigned managed identity with acrPull permissions"
               }
             },
             "appInsightsConnectionString": {
@@ -254,7 +254,7 @@
               "identity": {
                 "type": "UserAssigned",
                 "userAssignedIdentities": {
-                  "[format('{0}', parameters('managedIdentityResourceId'))]": {}
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName')))]": {}
                 }
               },
               "properties": {
@@ -267,7 +267,7 @@
                   "registries": [
                     {
                       "server": "[parameters('containerRegistryServer')]",
-                      "identity": "[parameters('managedIdentityResourceId')]"
+                      "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName'))]"
                     }
                   ],
                   "secrets": [

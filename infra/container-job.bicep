@@ -15,8 +15,8 @@ param containerName string
 @description('Container registry server (e.g. myacr.azurecr.io)')
 param containerRegistryServer string
 
-@description('Resource ID of the user-assigned managed identity with acrPull permissions')
-param managedIdentityResourceId string
+@description('Name of the user-assigned managed identity with acrPull permissions')
+param managedIdentityName string
 
 @description('Resource ID of the Container Apps Environment')
 param containerAppsEnvironmentId string
@@ -51,7 +51,7 @@ module containerJob 'modules/container-app-job.bicep' = {
     containerImage: containerImage
     containerName: containerName
     containerRegistryServer: containerRegistryServer
-    managedIdentityResourceId: managedIdentityResourceId
+    managedIdentityName: managedIdentityName
     appInsightsConnectionString: appInsightsConnectionString
     triggerType: triggerType
     cronExpression: cronExpression
