@@ -69,53 +69,6 @@ public class Worker : BackgroundService
             AccessToken token = credential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
             string rawToken = token.Token;
 
-            _logger.LogInformation("--- Raw Token ---");
-
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(rawToken);
-
-            _logger.LogInformation("--- Decoded Token Contents ---");
-            _logger.LogInformation("Header:  {SerializeToJson}", jwtToken.Header.SerializeToJson());
-            _logger.LogInformation("Issuer:  {JwtTokenIssuer}", jwtToken.Issuer);
-            _logger.LogInformation("Subject: {JwtTokenSubject}", jwtToken.Subject);
-            _logger.LogInformation("Expires: {JwtTokenValidTo} (UTC)", jwtToken.ValidTo);
-
-            _logger.LogInformation("--- Claims ---");
-            foreach (var claim in jwtToken.Claims)
-            {
-                _logger.LogInformation("{ClaimType}: {ClaimValue}", claim.Type, claim.Value);
-            }
-        }
-        catch (AuthenticationFailedException e)
-        {
-            _logger.LogError("Authentication Failed: {EMessage}", e.Message);
-        }
-    }
-    
-    private void DumpEnvironment()
-    {
-        var envVars = Environment.GetEnvironmentVariables()
-            .Cast<System.Collections.DictionaryEntry>()
-            .OrderBy(e => e.Key.ToString());
-
-        foreach (var entry in envVars)
-        {
-            _logger.LogInformation("{Key} = {Value}", entry.Key, entry.Value);
-        }
-    }
-
-    private void DumpCredentials()
-    {
-        var credential = new DefaultAzureCredential();
-        var tokenRequestContext = new TokenRequestContext(["https://management.azure.com/.default"]);
-        
-        try
-        {
-            _logger.LogDebug("Fetching token from Azure Identity endpoint...");
-    
-            AccessToken token = credential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
-            string rawToken = token.Token;
-
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(rawToken);
 
