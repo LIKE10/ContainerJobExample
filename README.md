@@ -43,7 +43,7 @@ ContainerJobExample/
 | [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) | 2.60+ |
 | [Bicep CLI](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install) | 0.27+ |
 
-An **Azure subscription** with an existing resource group and an **Azure Container Registry (ACR)** are also required.
+An **Azure subscription** is also required. You can deploy the Azure Container Registry and its dedicated resource group with [infra/acr.bicep](infra/acr.bicep).
 
 ---
 
@@ -65,6 +65,27 @@ The following parameters are **not** stored in the param file and must be suppli
 | `scheduledContainerImage` | Full image reference for the scheduled job, e.g. `myacr.azurecr.io/scheduledexample:run-123` |
 | `containerRegistryServer` | ACR login server, e.g. `myacr.azurecr.io` |
 | `managedIdentityResourceId` | Full resource ID of a pre-existing user-assigned managed identity that has `acrPull` permissions on the registry |
+
+### Optional: select a specific user-assigned managed identity
+
+The worker apps support an optional `AZURE_CLIENT_ID` environment variable:
+
+- If `AZURE_CLIENT_ID` is not set, the app uses the default runtime managed identity.
+- If `AZURE_CLIENT_ID` is set, the app authenticates with that specific user-assigned managed identity.
+
+Set this value on both Container App Jobs if you need to pin the identity explicitly:
+
+```bash
+az containerapp job update \
+  --name <appName>-manual-job \
+  --resource-group <your-resource-group> \
+  --set-env-vars AZURE_CLIENT_ID=<user-assigned-managed-identity-client-id>
+
+az containerapp job update \
+  --name <appName>-scheduled-job \
+  --resource-group <your-resource-group> \
+  --set-env-vars AZURE_CLIENT_ID=<user-assigned-managed-identity-client-id>
+```
 
 ### GitHub Actions secrets
 
@@ -110,6 +131,26 @@ docker run --rm scheduledexample:local
 
 ## Infrastructure Deployment (manual)
 
+Create the dedicated ACR resource group and registry first:
+
+```bash
+az deployment sub create \
+  --location canadacentral \
+  --template-file infra/acr.bicep \
+  --parameters infra/acr.bicepparam
+```
+
+Then deploy prerequisites (managed identity, role assignment, and shared resources):
+
+```bash
+az deployment sub create \
+  --location canadacentral \
+  --template-file infra/prereqs.bicep \
+  --parameters infra/prereqs.bicepparam
+```
+
+Finally, deploy the Container Apps jobs into your application resource group:
+
 ```bash
 az deployment group create \
   --resource-group <your-resource-group> \
@@ -133,6 +174,44 @@ The workflow at `.github/workflows/deploy.yml` is triggered manually (`workflow_
 3. **Deploy** – logs in to Azure and ACR, pushes both images, deploys the Bicep template, then updates both Container App Jobs to use the new images.
 
 ---
+
+## Deploying the images
+
+# Login to ACR
+```
+az acr login --name containerjobexampleacr --resource-group containerjobexampleacr-rg
+```
+
+# Build and push images
+```
+docker build -t containerjobexampleacr.azurecr.io/manualexample:latest -f Dockerfile .
+docker build -t containerjobexampleacr.azurecr.io/scheduledexample:latest -f Dockerfile.scheduled .
+docker push containerjobexampleacr.azurecr.io/manualexample:latest
+docker push containerjobexampleacr.azurecr.io/scheduledexample:latest
+```
+
+# Deploy jobs
+
+```
+az deployment group create `
+  --resource-group containerjobexampler-rg `
+  --template-file infra/container-job.bicep `
+  --parameters infra/container-job.bicepparam `
+  --parameters containerImage='containerjobexampleacr.azurecr.io/manualexample:latest' `
+  --parameters jobName='containerjobmanual-job' `
+  --parameters containerName='manualcontainerjob' 
+
+az deployment group create `
+  --resource-group containerjobexampler-rg `
+  --template-file infra/container-job.bicep `
+  --parameters infra/container-job.bicepparam `
+  --parameters containerImage='containerjobexampleacr.azurecr.io/scheduledexample:latest' `
+  --parameters triggerType='Schedule' `
+  --parameters jobName='containerjobschedule-job' `
+  --parameters containerName='schedulecontainerjob' 
+
+
+```
 
 ## Running the Jobs
 

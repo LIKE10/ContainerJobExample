@@ -1,3 +1,4 @@
+using Azure.Identity;
 using ScheduledExample;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog;
@@ -10,6 +11,15 @@ builder.Services.AddApplicationInsightsTelemetryWorkerService(options =>
 {
     options.ConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
 });
+
+// Configure managed identity credential for Azure service authentication
+// If AZURE_CLIENT_ID is set, use the specified user-assigned managed identity
+// Otherwise, use DefaultAzureCredential which automatically uses the runtime identity
+var clientId = builder.Configuration["AZURE_CLIENT_ID"];
+Azure.Core.TokenCredential credential = string.IsNullOrEmpty(clientId)
+    ? new DefaultAzureCredential()
+    : new ManagedIdentityCredential(clientId);
+builder.Services.AddSingleton(credential);
 
 // Configure Serilog with Console and Application Insights sinks
 builder.Services.AddSerilog((services, loggerConfig) =>
