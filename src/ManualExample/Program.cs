@@ -32,7 +32,7 @@ builder.Services.AddSerilog((services, loggerConfig) =>
         .Enrich.FromLogContext()
         .Enrich.WithProperty("ExecutionId", "none")
         .WriteTo.Console(
-            outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{ExecutionId}] {Message:lj}{NewLine}{Exception}")
+            outputTemplate: "[{Level:u3}] [{ExecutionId}] {Message:lj}{NewLine}{Exception}")
         .WriteTo.ApplicationInsights(
             telemetryConfiguration,
             TelemetryConverter.Traces);
