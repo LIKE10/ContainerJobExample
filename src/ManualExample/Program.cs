@@ -18,7 +18,7 @@ builder.Services.AddApplicationInsightsTelemetryWorkerService(options =>
 var clientId = builder.Configuration["AZURE_CLIENT_ID"];
 Azure.Core.TokenCredential credential = string.IsNullOrEmpty(clientId)
     ? new DefaultAzureCredential()
-    : new ManagedIdentityCredential(clientId);
+    : new ManagedIdentityCredential(ManagedIdentityId.FromUserAssignedClientId(clientId));
 builder.Services.AddSingleton(credential);
 
 // Configure Serilog with Console and Application Insights sinks
