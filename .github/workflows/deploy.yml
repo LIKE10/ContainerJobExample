@@ -21,10 +21,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up .NET ${{ env.DOTNET_VERSION }}
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -49,13 +49,13 @@ jobs:
             --output ${{ env.PUBLISH_OUTPUT_SCHEDULED }}
 
       - name: Upload ManualExample artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: publish-manual
           path: ${{ env.PUBLISH_OUTPUT_MANUAL }}
 
       - name: Upload ScheduledExample artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: publish-scheduled
           path: ${{ env.PUBLISH_OUTPUT_SCHEDULED }}
@@ -71,7 +71,7 @@ jobs:
       image_tag: ${{ steps.meta.outputs.image_tag }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set image tag
         id: meta
@@ -102,13 +102,13 @@ jobs:
             | gzip > image-scheduled.tar.gz
 
       - name: Upload ManualExample Docker image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docker-image-manual
           path: image-manual.tar.gz
 
       - name: Upload ScheduledExample Docker image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docker-image-scheduled
           path: image-scheduled.tar.gz
@@ -123,23 +123,23 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download ManualExample Docker image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: docker-image-manual
 
       - name: Download ScheduledExample Docker image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: docker-image-scheduled
-
-      - name: Log in to Azure
+      - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Log in to Azure Container Registry
         run: |
           az acr login --name ${{ secrets.ACR_NAME }}
@@ -156,29 +156,34 @@ jobs:
           docker push \
             ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}
 
-      - name: Deploy Bicep infrastructure
+      - name: Deploy Bicep Container Jobs
         run: |
-          az deployment group create \
+          az deployment group create \  
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --template-file infra/main.bicep \
-            --parameters \
-                appName="${{ secrets.APP_NAME }}" \
-                location="${{ secrets.AZURE_LOCATION }}" \
-                manualContainerImage="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}" \
-                scheduledContainerImage="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}" \
-                containerRegistryServer="${{ secrets.ACR_LOGIN_SERVER }}" \
-                managedIdentityResourceId="${{ secrets.MANAGED_IDENTITY_RESOURCE_ID }}"
+            --template-file infra/container-job.bicep \
+            --parameters infra/container-job.bicepparam \
+            --parameters containerImage='${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}' \
+            --parameters jobName='manualcontainer-job' \
+            --parameters containerName='manualcontainer' 
+
+          az deployment group create \  
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --template-file infra/container-job.bicep \
+            --parameters infra/container-job.bicepparam \
+            --parameters containerImage='${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}' \
+            --parameters jobName='scheduledcontainer-job' \
+            --parameters containerName='scheduledcontainer' 
 
       - name: Update ManualExample Container App Job image
         run: |
           az containerapp job update \
-            --name "${{ secrets.APP_NAME }}-manual-job" \
+            --name 'manualcontainer-job' \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}"
 
       - name: Update ScheduledExample Container App Job image
         run: |
           az containerapp job update \
-            --name "${{ secrets.APP_NAME }}-scheduled-job" \
+            --name 'scheduledcontainer-job' \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}"
