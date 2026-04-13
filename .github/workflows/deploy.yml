@@ -160,7 +160,7 @@ jobs:
       - name: Deploy Bicep Container Jobs
         run: |
           az deployment group create \  
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --resource-group '${{ secrets.AZURE_RESOURCE_GROUP }}' \
             --template-file infra/container-job.bicep \
             --parameters infra/container-job.bicepparam \
             --parameters containerImage='${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}' \
@@ -168,7 +168,7 @@ jobs:
             --parameters containerName='manualcontainer' 
 
           az deployment group create \  
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --resource-group '${{ secrets.AZURE_RESOURCE_GROUP }}' \
             --template-file infra/container-job.bicep \
             --parameters infra/container-job.bicepparam \
             --parameters containerImage='${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}' \
@@ -179,12 +179,12 @@ jobs:
         run: |
           az containerapp job update \
             --name 'manualcontainer-job' \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --resource-group '${{ secrets.AZURE_RESOURCE_GROUP }}' \
             --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}"
 
       - name: Update ScheduledExample Container App Job image
         run: |
           az containerapp job update \
             --name 'scheduledcontainer-job' \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --resource-group '${{ secrets.AZURE_RESOURCE_GROUP }}' \
             --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}"
