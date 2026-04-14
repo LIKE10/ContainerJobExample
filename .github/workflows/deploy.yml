@@ -169,8 +169,8 @@ jobs:
           az deployment group create --resource-group '${{ secrets.AZURE_RESOURCE_GROUP }}' \
             --template-file infra/container-job.bicep \
             --parameters infra/container-job.bicepparam \
-           --parameters containerImage='${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}' \
-            --parameters triggerType='Schedule' \ 
+            --parameters containerImage='${{ secrets.ACR_LOGIN_SERVER }}/${{ env.SCHEDULED_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}' \
+            --parameters triggerType='Schedule' \
             --parameters jobName='scheduledcontainer-job' \
             --parameters containerName='scheduledcontainer' 
 
