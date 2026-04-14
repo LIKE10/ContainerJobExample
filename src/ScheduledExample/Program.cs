@@ -22,12 +22,17 @@ Azure.Core.TokenCredential credential = string.IsNullOrEmpty(clientId)
 builder.Services.AddSingleton(credential);
 
 // Configure Serilog with Console and Application Insights sinks
+// The minimum log level can be overridden via the LOG_LEVEL environment variable (default: Information)
+var minimumLevel = Enum.TryParse<LogEventLevel>(builder.Configuration["LOG_LEVEL"], ignoreCase: true, out var parsedLevel)
+    ? parsedLevel
+    : LogEventLevel.Information;
+
 builder.Services.AddSerilog((services, loggerConfig) =>
 {
     var telemetryConfiguration = services.GetRequiredService<TelemetryConfiguration>();
 
     loggerConfig
-        .MinimumLevel.Information()
+        .MinimumLevel.Is(minimumLevel)
         .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
         .Enrich.FromLogContext()
         .Enrich.WithProperty("ExecutionId", "none")
