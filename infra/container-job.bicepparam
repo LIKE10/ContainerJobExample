@@ -2,6 +2,10 @@ using './container-job.bicep'
 
 param jobName = 'containerjobexample-job'
 param containerName = 'examplecontainerjob'
+param tagValues = {
+  Department: 'NRC-CNRC'
+  Environment: 'Development'
+}
 
 // These parameters are provided at deploy-time by the CI/CD pipeline
 // or via az deployment group create --parameters.

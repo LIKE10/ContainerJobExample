@@ -12,6 +12,9 @@ param acrName string
 @description('Resource group that contains the existing Azure Container Registry')
 param acrResourceGroup string
 
+@description('Tags to apply to the resources')
+param tagValues object
+
 // ── Resource Group ───────────────────────────────────────────────────────────
 resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   name: '${appName}-rg'
@@ -29,6 +32,7 @@ module resources 'modules/prereqs-resources.bicep' = {
   params: {
     appName: appName
     location: location
+    tagValues: tagValues
   }
 }
 

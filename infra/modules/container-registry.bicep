@@ -12,6 +12,9 @@ param acrName string
 ])
 param acrSku string = 'Basic'
 
+@description('Tags to apply to the resources')
+param tagValues object
+
 // ── Azure Container Registry ────────────────────────────────────────────────
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: acrName
@@ -22,6 +25,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   properties: {
     adminUserEnabled: false
   }
+  tags: tagValues
 }
 
 // ── Outputs ─────────────────────────────────────────────────────────────────
