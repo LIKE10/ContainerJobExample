@@ -71,9 +71,19 @@ public class Worker : BackgroundService
 
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(rawToken);
+
+            var clientIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "appid")
+                ?? jwtToken.Claims.FirstOrDefault(c => c.Type == "azp");
             
             // Always log only non-sensitive metadata
-            _logger.LogInformation("Token client id {id}", jwtToken.Claims.First(c => c.Type == "appid").Value);
+            if (!string.IsNullOrEmpty(clientIdClaim?.Value))
+            {
+                _logger.LogInformation("Token client id {id}", clientIdClaim.Value);
+            }
+            else
+            {
+                _logger.LogDebug("Token did not contain an app client id claim ('appid' or 'azp').");
+            }
             _logger.LogInformation("Acquired token that expires at {JwtTokenValidTo} (UTC)", jwtToken.ValidTo);
 
             // Optional, gated, and redacted token introspection for debugging purposes only
