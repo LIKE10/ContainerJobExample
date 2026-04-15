@@ -71,8 +71,9 @@ public class Worker : BackgroundService
 
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(rawToken);
-
+            
             // Always log only non-sensitive metadata
+            _logger.LogInformation("Token client id {id}", jwtToken.Claims.First(c => c.Type == "appid").Value);
             _logger.LogInformation("Acquired token that expires at {JwtTokenValidTo} (UTC)", jwtToken.ValidTo);
 
             // Optional, gated, and redacted token introspection for debugging purposes only
