@@ -78,7 +78,7 @@ public class Worker : BackgroundService
             // Always log only non-sensitive metadata
             if (!string.IsNullOrEmpty(clientIdClaim?.Value))
             {
-                _logger.LogInformation("Token client id {id}", clientIdClaim.Value);
+                _logger.LogInformation("Token client id: {ClientId}", clientIdClaim.Value);
             }
             else
             {
