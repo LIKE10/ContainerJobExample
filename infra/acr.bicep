@@ -17,10 +17,14 @@ param acrName string
 ])
 param acrSku string = 'Basic'
 
+@description('Tags to apply to the resources')
+param tagValues object
+
 // ── Resource Group ───────────────────────────────────────────────────────────
 resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   name: acrResourceGroup
   location: location
+  tags: tagValues
 }
 
 // ── Azure Container Registry ────────────────────────────────────────────────
@@ -31,6 +35,7 @@ module containerRegistry 'modules/container-registry.bicep' = {
     location: location
     acrName: acrName
     acrSku: acrSku
+    tagValues: tagValues
   }
 }
 

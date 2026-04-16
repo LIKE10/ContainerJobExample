@@ -4,16 +4,21 @@ param location string
 @description('Base name used to derive all resource names')
 param appName string
 
+@description('Tags to apply to the resources')
+param tagValues object
+
 // ── User-Assigned Managed Identity ───────────────────────────────────────────
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: '${appName}-id'
   location: location
+  tags: tagValues
 }
 
 // ── Log Analytics Workspace ──────────────────────────────────────────────────
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: '${appName}-law'
   location: location
+  tags: tagValues
   properties: {
     sku: {
       name: 'PerGB2018'
@@ -27,6 +32,8 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${appName}-ai'
   location: location
   kind: 'other'
+  tags: tagValues
+
   properties: {
     Application_Type: 'other'
     WorkspaceResourceId: logAnalytics.id
@@ -46,6 +53,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01'
       }
     }
   }
+  tags: tagValues
 }
 
 // ── Outputs ──────────────────────────────────────────────────────────────────

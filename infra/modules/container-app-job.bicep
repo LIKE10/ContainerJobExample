@@ -39,6 +39,9 @@ param cpu string = '0.25'
 @description('Memory allocation for the container')
 param memory string = '0.5Gi'
 
+@description('Tags to apply to the Container App Job')
+param tagValues object
+
 @description('Maximum time in seconds a replica can run before being terminated')
 param replicaTimeout int = 600
 
@@ -59,6 +62,7 @@ resource containerAppJob 'Microsoft.App/jobs@2025-10-02-preview' = {
       '${userIdentity.id}': {}
     }
   }
+  tags: tagValues
   properties: {
     environmentId: containerAppsEnvironmentId
     configuration: {
