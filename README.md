@@ -66,6 +66,45 @@ The following parameters are **not** stored in the param file and must be suppli
 | `containerRegistryServer` | ACR login server, e.g. `myacr.azurecr.io` |
 | `managedIdentityResourceId` | Full resource ID of a pre-existing user-assigned managed identity that has `acrPull` permissions on the registry |
 
+### Bicep parameters (`infra/prereqs.bicepparam`)
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `appName` | `containerjobexampler` | Base name used to derive all resource names |
+| `location` | `canadacentral` | Azure region for all resources |
+| `acrName` | *(required at deploy time)* | Name of the existing Azure Container Registry |
+| `acrResourceGroup` | *(required at deploy time)* | Resource group containing the ACR |
+| `tagValues` | `{ Department: 'NRC-CNRC', Environment: 'Development' }` | Azure resource tags applied to all provisioned resources |
+
+> **Log Analytics retention**: The Log Analytics workspace created by `prereqs.bicep` retains data for **90 days**.
+
+### Bicep parameters (`infra/acr.bicepparam`)
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `location` | `canadacentral` | Azure region |
+| `acrResourceGroup` | `containerjobexampleacr-rg` | Resource group for the ACR |
+| `acrName` | `containerjobexampleacr` | Name of the Azure Container Registry |
+| `acrSku` | `Basic` | ACR pricing tier (`Basic`, `Standard`, or `Premium`) |
+| `tagValues` | `{ Department: 'NRC-CNRC', Environment: 'Development' }` | Azure resource tags applied to the registry and its resource group |
+
+### Bicep parameters (`infra/container-job.bicepparam`)
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `jobName` | `containerjobexample-job` | Name of the Container App Job |
+| `containerName` | `examplecontainerjob` | Name of the container within the job |
+| `tagValues` | `{ Department: 'NRC-CNRC', Environment: 'Development' }` | Azure resource tags applied to the Container App Job |
+
+The following parameters must be supplied at deploy time:
+
+| Parameter | Description |
+|-----------|-------------|
+| `containerImage` | Full container image reference, e.g. `myacr.azurecr.io/manualexample:latest` |
+| `containerRegistryServer` | ACR login server, e.g. `myacr.azurecr.io` |
+| `managedIdentityResourceId` | Full resource ID of the user-assigned managed identity with `acrPull` permissions |
+| `containerAppsEnvironmentId` | Resource ID of the Container Apps environment |
+
 ### Optional: select a specific user-assigned managed identity
 
 The worker apps support an optional `AZURE_CLIENT_ID` environment variable:
