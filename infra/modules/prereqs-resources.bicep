@@ -33,7 +33,6 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   location: location
   kind: 'other'
   tags: tagValues
-
   properties: {
     Application_Type: 'other'
     WorkspaceResourceId: logAnalytics.id
@@ -44,6 +43,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: '${appName}-env'
   location: location
+  tags: tagValues
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
@@ -53,7 +53,6 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01'
       }
     }
   }
-  tags: tagValues
 }
 
 // ── Outputs ──────────────────────────────────────────────────────────────────

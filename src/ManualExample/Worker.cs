@@ -24,7 +24,7 @@ public class Worker : BackgroundService
         try
         {
             _logger.LogInformation("Manual job started. ExecutionId: {ExecutionId}, Time: {Time}", executionId, DateTimeOffset.UtcNow);
-            _logger.LogInformation("Running manual job as identity: {0}", Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"));
+            _logger.LogInformation("Running manual job as identity: {AzureClientId}", Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"));
 
             await DoWorkAsync(stoppingToken);
 
@@ -72,10 +72,10 @@ public class Worker : BackgroundService
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(rawToken);
 
+            // Always log only non-sensitive metadata
             var clientIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "appid")
                 ?? jwtToken.Claims.FirstOrDefault(c => c.Type == "azp");
-            
-            // Always log only non-sensitive metadata
+
             if (!string.IsNullOrEmpty(clientIdClaim?.Value))
             {
                 _logger.LogInformation("Token client id: {ClientId}", clientIdClaim.Value);
@@ -115,8 +115,8 @@ public class Worker : BackgroundService
         _logger.LogInformation("Executing manual job work item");
 
         DumpEnvironment();
-        DumpCredentials();  
-        
+        DumpCredentials();
+
         // Simulate workload — replace with real business logic
         await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
 
