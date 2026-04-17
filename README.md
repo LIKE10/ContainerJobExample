@@ -66,6 +66,28 @@ The following parameters are **not** stored in the param file and must be suppli
 | `containerRegistryServer` | ACR login server, e.g. `myacr.azurecr.io` |
 | `managedIdentityResourceId` | Full resource ID of a pre-existing user-assigned managed identity that has `acrPull` permissions on the registry |
 
+### Resource tagging (`tagValues`)
+
+The `acr.bicep`, `prereqs.bicep`, and `container-job.bicep` templates accept a `tagValues` parameter that applies Azure resource tags to every provisioned resource. Set this in the corresponding `.bicepparam` file or pass it at deploy time:
+
+```bicep
+param tagValues = {
+  Department: 'MyTeam'
+  Environment: 'Production'
+}
+```
+
+The default values shipped in the param files are:
+
+| Tag | Default value |
+|-----|---------------|
+| `Department` | `NRC-CNRC` |
+| `Environment` | `Development` |
+
+Override these values in `infra/acr.bicepparam`, `infra/prereqs.bicepparam`, and `infra/container-job.bicepparam` before deployment.
+
+---
+
 ### Optional: select a specific user-assigned managed identity
 
 The worker apps support an optional `AZURE_CLIENT_ID` environment variable:
