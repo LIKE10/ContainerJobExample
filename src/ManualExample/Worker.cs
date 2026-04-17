@@ -24,7 +24,7 @@ public class Worker : BackgroundService
         try
         {
             _logger.LogInformation("Manual job started. ExecutionId: {ExecutionId}, Time: {Time}", executionId, DateTimeOffset.UtcNow);
-            _logger.LogInformation("Running manual job as identity: {0}", Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"));
+            _logger.LogInformation("Running manual job as identity: {ClientId}", Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"));
 
             await DoWorkAsync(stoppingToken);
 
@@ -57,7 +57,7 @@ public class Worker : BackgroundService
         }
     }
 
-    private void DumpCredentials()
+    private async Task DumpCredentialsAsync()
     {
         var credential = new DefaultAzureCredential();
         var tokenRequestContext = new TokenRequestContext(["https://management.azure.com/.default"]);
@@ -66,7 +66,7 @@ public class Worker : BackgroundService
         {
             _logger.LogDebug("Fetching token from Azure Identity endpoint...");
     
-            AccessToken token = credential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
+            AccessToken token = await credential.GetTokenAsync(tokenRequestContext);
             string rawToken = token.Token;
 
             var handler = new JwtSecurityTokenHandler();
@@ -115,7 +115,7 @@ public class Worker : BackgroundService
         _logger.LogInformation("Executing manual job work item");
 
         DumpEnvironment();
-        DumpCredentials();  
+        await DumpCredentialsAsync();  
         
         // Simulate workload — replace with real business logic
         await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
