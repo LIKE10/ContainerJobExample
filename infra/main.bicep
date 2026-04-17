@@ -19,10 +19,14 @@ param managedIdentityResourceId string
 @description('Cron expression for the scheduled job (e.g. "0 0 * * *" for daily at midnight UTC)')
 param scheduledJobCron string = '0 0 * * *'
 
+@description('Tags to apply to all resources')
+param tags object = {}
+
 // ── Log Analytics Workspace ──────────────────────────────────────────────────
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: '${appName}-law'
   location: location
+  tags: tags
   properties: {
     sku: {
       name: 'PerGB2018'
@@ -36,6 +40,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${appName}-ai'
   location: location
   kind: 'other'
+  tags: tags
   properties: {
     Application_Type: 'other'
     WorkspaceResourceId: logAnalytics.id
@@ -46,6 +51,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: '${appName}-env'
   location: location
+  tags: tags
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
@@ -61,6 +67,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01'
 resource manualContainerAppJob 'Microsoft.App/jobs@2025-10-02-preview' = {
   name: '${appName}-manual-job'
   location: location
+  tags: tags
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -111,6 +118,7 @@ resource manualContainerAppJob 'Microsoft.App/jobs@2025-10-02-preview' = {
 resource scheduledContainerAppJob 'Microsoft.App/jobs@2025-10-02-preview' = {
   name: '${appName}-scheduled-job'
   location: location
+  tags: tags
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
