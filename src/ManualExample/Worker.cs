@@ -24,7 +24,7 @@ public class Worker : BackgroundService
         try
         {
             _logger.LogInformation("Manual job started. ExecutionId: {ExecutionId}, Time: {Time}", executionId, DateTimeOffset.UtcNow);
-            _logger.LogInformation("Running manual job as identity: {0}", Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"));
+            _logger.LogInformation("Running manual job as identity: {AzureClientId}", Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"));
 
             await DoWorkAsync(stoppingToken);
 
@@ -57,16 +57,16 @@ public class Worker : BackgroundService
         }
     }
 
-    private void DumpCredentials()
+    private async Task DumpCredentialsAsync(CancellationToken cancellationToken)
     {
         var credential = new DefaultAzureCredential();
         var tokenRequestContext = new TokenRequestContext(["https://management.azure.com/.default"]);
-        
+
         try
         {
             _logger.LogDebug("Fetching token from Azure Identity endpoint...");
-    
-            AccessToken token = credential.GetTokenAsync(tokenRequestContext).GetAwaiter().GetResult();
+
+            AccessToken token = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
             string rawToken = token.Token;
 
             var handler = new JwtSecurityTokenHandler();
@@ -74,7 +74,7 @@ public class Worker : BackgroundService
 
             var clientIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "appid")
                 ?? jwtToken.Claims.FirstOrDefault(c => c.Type == "azp");
-            
+
             // Always log only non-sensitive metadata
             if (!string.IsNullOrEmpty(clientIdClaim?.Value))
             {
@@ -109,14 +109,14 @@ public class Worker : BackgroundService
             throw;
         }
     }
-    
+
     private async Task DoWorkAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Executing manual job work item");
 
         DumpEnvironment();
-        DumpCredentials();  
-        
+        await DumpCredentialsAsync(cancellationToken);
+
         // Simulate workload — replace with real business logic
         await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
 
