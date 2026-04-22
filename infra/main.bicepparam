@@ -13,7 +13,6 @@ param tags = {
   CostCenter: 'CC5678'
   Project: 'WebsiteRedesign'
   Department: 'Marketing'
-  CreatedOn: '2026-04-17'
   Confidentiality: 'HighlyConfidential'
   Criticality: 'High'
 }
