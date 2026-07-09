@@ -42,7 +42,7 @@ param cpu string = '0.25'
 param memory string = '0.5Gi'
 
 @description('Tags to apply to the Container App Job')
-param tagValues object
+param environmentTags object
 
 // ── Container App Job ───────────────────────────────────────────────────────
 module containerJob 'modules/container-app-job.bicep' = {
@@ -60,7 +60,7 @@ module containerJob 'modules/container-app-job.bicep' = {
     cronExpression: cronExpression
     cpu: cpu
     memory: memory
-    tagValues: tagValues
+    tagValues: environmentTags
   }
 }
 

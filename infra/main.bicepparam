@@ -1,11 +1,12 @@
 using './main.bicep'
 
+extends './global.bicepparam'
+
 // Override these values for your environment.
 // Sensitive parameters should be supplied
 // via GitHub Actions secrets or az deployment group create --parameters.
 
 param appName = 'containerjobexample'
-param location = 'canadacentral'
 
 // manualContainerImage, scheduledContainerImage, containerRegistryServer,
 // and managedIdentityResourceId are provided
