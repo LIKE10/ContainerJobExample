@@ -13,18 +13,18 @@ A collection of .NET Worker Services packaged as Docker containers and deployed 
 
 ```
 ContainerJobExample/
-├── Dockerfile                       # Multi-stage Docker build for ManualExample
-├── Dockerfile.scheduled             # Multi-stage Docker build for ScheduledExample
 ├── infra/
 │   ├── main.bicep                   # Bicep template – Log Analytics, App Insights, Container Apps Env, both Jobs
 │   └── main.bicepparam              # Default parameter values (region, app name)
 ├── src/
 │   ├── ManualExample/
 │   │   ├── ManualExample.csproj     # .NET 10 Worker Service project
+│   │   ├── Dockerfile               # Multi-stage Docker build for ManualExample
 │   │   ├── Program.cs               # Host setup with Serilog + Application Insights
 │   │   └── Worker.cs                # BackgroundService that runs the manual job logic
 │   └── ScheduledExample/
 │       ├── ScheduledExample.csproj  # .NET 10 Worker Service project
+│       ├── Dockerfile               # Multi-stage Docker build for ScheduledExample
 │       ├── Program.cs               # Host setup with Serilog + Application Insights
 │       └── Worker.cs                # BackgroundService that runs the scheduled job logic
 └── .github/
@@ -119,11 +119,11 @@ dotnet run --project src/ScheduledExample/ScheduledExample.csproj
 
 ```bash
 # ManualExample
-docker build --tag manualexample:local --file Dockerfile .
+docker build --tag manualexample:local --file src/ManualExample/Dockerfile .
 docker run --rm manualexample:local
 
 # ScheduledExample
-docker build --tag scheduledexample:local --file Dockerfile.scheduled .
+docker build --tag scheduledexample:local --file src/ScheduledExample/Dockerfile .
 docker run --rm scheduledexample:local
 ```
 
@@ -179,12 +179,12 @@ The workflow at `.github/workflows/deploy.yml` is triggered manually (`workflow_
 
 # Login to ACR
 ```
-az acr login --name containerjobexampleacr --resource-group containerjobexampleacr-rg
+az acr login --name containerjobexampleacr --resource-group containerjobtstacr-rg
 ```
 
 # Build and push images
 ```
-docker build -t containerjobexampleacr.azurecr.io/manualexample:latest -f src/ManualExample/Dockerfile .
+docker build -t containerjobtstacr.azurecr.io/manualexample:latest -f src/ManualExample/Dockerfile .
 docker build -t containerjobexampleacr.azurecr.io/scheduledexample:latest -f src/ScheduledExample/Dockerfile .
 docker push containerjobexampleacr.azurecr.io/manualexample:latest
 docker push containerjobexampleacr.azurecr.io/scheduledexample:latest

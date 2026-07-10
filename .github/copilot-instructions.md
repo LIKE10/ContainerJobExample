@@ -11,8 +11,8 @@ dotnet run --project src/ManualExample/ManualExample.csproj
 dotnet run --project src/ScheduledExample/ScheduledExample.csproj
 
 # Docker builds (run from repo root)
-docker build --tag manualexample:local --file Dockerfile .
-docker build --tag scheduledexample:local --file Dockerfile.scheduled .
+docker build --tag manualexample:local --file src/ManualExample/Dockerfile .
+docker build --tag scheduledexample:local --file src/ScheduledExample/Dockerfile .
 ```
 
 There are no tests configured in this repository.
@@ -54,6 +54,6 @@ All projects use **Serilog** with two sinks: Console and Application Insights. U
 2. Add the same three NuGet packages: `Microsoft.ApplicationInsights.WorkerService`, `Serilog.AspNetCore`, `Serilog.Sinks.ApplicationInsights`
 3. Copy the `Program.cs` host setup pattern (App Insights + Serilog configuration)
 4. Implement a `Worker : BackgroundService` following the try/catch/finally pattern above
-5. Add a `Dockerfile.<name>` at the repo root (multi-stage: sdk build → aspnet runtime)
+5. Add a `Dockerfile` in the new project folder under `src/<JobName>/` (multi-stage: sdk build → aspnet runtime)
 6. Add the corresponding Container App Job resource in `infra/main.bicep`
 7. Update `.github/workflows/deploy.yml` to build, containerize, and deploy the new job
