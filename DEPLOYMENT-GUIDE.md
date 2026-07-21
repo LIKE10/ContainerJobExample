@@ -47,8 +47,10 @@ az bicep build --file "infra\container-job.bicep"
 ### 3. Deploy ACR foundation (`acr.bicep`) — platform team
 
 ```powershell
+$AcrDeploymentName = "deploy-acr-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+
 az deployment sub create `
-  --name "deploy-acr-$(Get-Date -Format 'yyyyMMdd-HHmmss')" `
+  --name $AcrDeploymentName `
   --location $Location `
   --template-file "infra\acr.bicep" `
   --parameters "infra\acr.bicepparam"
@@ -92,12 +94,14 @@ $ContainerImage  = "<acr-login-server>/<image-name>:<tag>"      # e.g. container
 $RegistryServer  = "<acr-login-server>"                         # e.g. containerjobexampleacr.azurecr.io
 $JobName         = "<job-name>"                                 # e.g. containerjobexample-manual-job
 $ContainerName   = "<container-name>"                           # e.g. manualcontainer
-$ManagedIdentity = "<managed-identity-name>"                    # e.g. containerjobexampler-id
+$ManagedIdentity = "<managed-identity-name>"                    # e.g. containerjobexample-id
 $TriggerType     = "Manual"                                     # or "Schedule"
 $CronExpression  = "0 0 * * *"                                  # only used for Schedule
 
+$JobDeploymentName = "deploy-job-$JobName-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+
 az deployment group create `
-  --name "deploy-job-$JobName-$(Get-Date -Format 'yyyyMMdd-HHmmss')" `
+  --name $JobDeploymentName `
   --resource-group $AppResourceGroup `
   --template-file "infra\container-job.bicep" `
   --parameters "infra\container-job.bicepparam" `
