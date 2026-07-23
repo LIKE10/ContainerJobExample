@@ -133,34 +133,34 @@ docker run --rm scheduledexample:local
 
 Create the dedicated ACR resource group and registry first:
 
-```bash
-az deployment sub create \
-  --location canadacentral \
-  --template-file infra/acr.bicep \
-  --parameters infra/acr.bicepparam
+```powershell
+az deployment sub create `
+  --location canadacentral `
+  --template-file infra/acr.bicep `
+  --parameters infra/acr.bicepparam `
 ```
 
 Then deploy prerequisites (managed identity, role assignment, and shared resources):
 
-```bash
-az deployment sub create \
-  --location canadacentral \
-  --template-file infra/prereqs.bicep \
-  --parameters infra/prereqs.bicepparam
+```powershell
+az deployment sub create `
+  --location canadacentral `
+  --template-file infra/prereqs.bicep `
+  --parameters infra/prereqs.bicepparam `
 ```
 
 Finally, deploy the Container Apps jobs into your application resource group:
 
-```bash
-az deployment group create \
-  --resource-group <your-resource-group> \
-  --template-file infra/main.bicep \
-  --parameters infra/main.bicepparam \
-  --parameters \
-      manualContainerImage="<acr>.azurecr.io/manualexample:<tag>" \
-      scheduledContainerImage="<acr>.azurecr.io/scheduledexample:<tag>" \
-      containerRegistryServer="<acr>.azurecr.io" \
-      managedIdentityResourceId="<managed-identity-resource-id>"
+```powershell
+az deployment group create `
+  --resource-group <your-resource-group> `
+  --template-file infra/main.bicep `
+  --parameters infra/main.bicepparam `
+  --parameters `
+      manualContainerImage="<acr>.azurecr.io/manualexample:<tag>" `
+      scheduledContainerImage="<acr>.azurecr.io/scheduledexample:<tag>" `
+      containerRegistryServer="<acr>.azurecr.io" `
+      managedIdentityResourceId="<managed-identity-resource-id>" `
 ```
 
 ---
@@ -178,28 +178,28 @@ The workflow at `.github/workflows/deploy.yml` is triggered manually (`workflow_
 ## Deploying the images
 
 # Login to ACR
-```
-az acr login --name containerjobexampleacr --resource-group containerjobtstacr-rg
+```powershell
+az acr login --name containerjobtstacr --resource-group containerjobtstacr-rg
 ```
 
 # Build and push images
-```
+```powershell
 docker build -t containerjobtstacr.azurecr.io/manualexample:latest -f src/ManualExample/Dockerfile .
-docker build -t containerjobexampleacr.azurecr.io/scheduledexample:latest -f src/ScheduledExample/Dockerfile .
-docker push containerjobexampleacr.azurecr.io/manualexample:latest
-docker push containerjobexampleacr.azurecr.io/scheduledexample:latest
+docker build -t containerjobtstacr.azurecr.io/scheduledexample:latest -f src/ScheduledExample/Dockerfile .
+docker push containerjobtstacr.azurecr.io/manualexample:latest
+docker push containerjobtstacr.azurecr.io/scheduledexample:latest
 ```
 
 # Deploy jobs
 
-```
+```powershell
 az deployment group create `
   --resource-group containerjobexampler-rg `
   --template-file infra/container-job.bicep `
   --parameters infra/container-job.bicepparam `
   --parameters containerImage='containerjobexampleacr.azurecr.io/manualexample:latest' `
   --parameters jobName='containermanual-job' `
-  --parameters containerName='manualcontainer' 
+  --parameters containerName='manualcontainer' `
 
 az deployment group create `
   --resource-group containerjobexampler-rg `
@@ -208,8 +208,7 @@ az deployment group create `
   --parameters containerImage='containerjobexampleacr.azurecr.io/scheduledexample:latest' `
   --parameters triggerType='Schedule' `
   --parameters jobName='containerscheduled-job' `
-  --parameters containerName='scheduledcontainer' 
-
+  --parameters containerName='scheduledcontainer' ` 
 
 ```
 
@@ -219,18 +218,18 @@ az deployment group create `
 
 After deployment, trigger the manual job from the Azure Portal or via the Azure CLI:
 
-```bash
-az containerapp job start \
-  --name <appName>-manual-job \
-  --resource-group <your-resource-group>
+```powershell
+az containerapp job start `
+  --name <appName>-manual-job `
+  --resource-group <your-resource-group> `
 ```
 
 ### ScheduledExample
 
 The scheduled job runs automatically according to the `scheduledJobCron` parameter (default: daily at midnight UTC). You can also trigger it manually:
 
-```bash
-az containerapp job start \
-  --name <appName>-scheduled-job \
-  --resource-group <your-resource-group>
+```powershell
+az containerapp job start `
+  --name <appName>-scheduled-job `
+  --resource-group <your-resource-group> `
 ```

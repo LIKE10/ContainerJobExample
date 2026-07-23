@@ -19,10 +19,10 @@
 flowchart TB
 	subgraph RG1[Resource Group: acrResourceGroup]
 		ACR[Azure Container Registry\nMicrosoft.ContainerRegistry/registries]
-		RBAC[Role AssignmentAcrPull\nMicrosoft.Authorization/roleAssignments]
+		RBAC[Role Assignment AcrPull\nMicrosoft.Authorization/roleAssignments]
 	end
 
-	subgraph RG2[Resource Group: ResourceGroup]
+	subgraph RG2[Resource Group: acaResourceGroup]
 		MI[User-Assigned Managed Identity\nMicrosoft.ManagedIdentity/userAssignedIdentities]
 		LAW[Log Analytics Workspace\nMicrosoft.OperationalInsights/workspaces]
 		AI[Application Insights\nMicrosoft.Insights/components]

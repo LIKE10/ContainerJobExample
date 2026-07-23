@@ -1,5 +1,4 @@
+using './prereqs.bicep'
 extends './dev-defaults.bicepparam'
 
-using './prereqs.bicep'
-
-param appName = 'containerjobexample'
+param appName = 'containerjobtst'

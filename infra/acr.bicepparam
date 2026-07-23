@@ -1,8 +1,7 @@
+using './acr.bicep'
 extends './dev-defaults.bicepparam'
 
-using './acr.bicep'
-
-param appName = 'containerjobexample'
+param appName = 'containerjobtst'
 // Only require a Basic SKU for this configuration
 param acrSku = 'Basic'
 
