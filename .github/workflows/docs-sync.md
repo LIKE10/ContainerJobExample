@@ -5,7 +5,12 @@ description: |
 on:
   schedule: daily on weekdays
   skip-if-match: 'is:pr is:open in:title "[docs-sync]"'
-permissions: read-all
+permissions: 
+  contents: read
+  issues: read
+  pull-requests: read
+  copilot-requests: write
+
 network:
   allowed: [defaults]
 tools:
