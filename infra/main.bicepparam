@@ -7,6 +7,16 @@ using './main.bicep'
 param appName = 'containerjobexample'
 param location = 'canadacentral'
 
+param tags = {
+  Environment: 'Production'
+  Owner: 'ops-team@company.com'
+  CostCenter: 'CC5678'
+  Project: 'WebsiteRedesign'
+  Department: 'Marketing'
+  Confidentiality: 'HighlyConfidential'
+  Criticality: 'High'
+}
+
 // manualContainerImage, scheduledContainerImage, containerRegistryServer,
 // and managedIdentityResourceId are provided
 // at deploy-time by the CI/CD pipeline.
