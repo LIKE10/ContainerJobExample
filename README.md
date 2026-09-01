@@ -137,7 +137,7 @@ Create the dedicated ACR resource group and registry first:
 az deployment sub create `
   --location canadacentral `
   --template-file infra/acr.bicep `
-  --parameters infra/acr.bicepparam `
+  --parameters infra/acr.bicepparam
 ```
 
 Then deploy prerequisites (managed identity, role assignment, and shared resources):
