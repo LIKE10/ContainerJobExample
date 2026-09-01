@@ -194,10 +194,10 @@ docker push containerjobtstacr.azurecr.io/scheduledexample:latest
 
 ```powershell
 az deployment group create `
-  --resource-group containerjobexampler-rg `
+  --resource-group containerjobtst-rg `
   --template-file infra/container-job.bicep `
   --parameters infra/container-job.bicepparam `
-  --parameters containerImage='containerjobexampleacr.azurecr.io/manualexample:latest' `
+  --parameters containerImage='containerjobtstacr.azurecr.io/manualexample:latest' `
   --parameters jobName='containermanual-job' `
   --parameters containerName='manualcontainer' `
 
