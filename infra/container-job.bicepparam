@@ -1,18 +1,18 @@
 using './container-job.bicep'
+extends './dev-defaults.bicepparam'
 
-param jobName = 'containerjobexample-job'
-param containerName = 'examplecontainerjob'
-param tagValues = {
-  Department: 'NRC-CNRC'
-  Environment: 'Development'
-}
+param jobName = 'containerjob-manualexample'
+param containerName = 'manualexamplecontainerjob'
 
 // These parameters are provided at deploy-time by the CI/CD pipeline
 // or via az deployment group create --parameters.
 //
 
-param containerImage = 'containerjobexampleacr.azurecr.io/manualexample:latest'
-param containerRegistryServer = 'containerjobexampleacr.azurecr.io'
-param managedIdentityName = 'containerjobexampler-id'
-param containerAppsEnvironmentId = '/subscriptions/30f38ab2-a851-4c7c-9203-d761be7c5102/resourceGroups/containerjobexampler-rg/providers/Microsoft.App/managedEnvironments/containerjobexampler-env'
-param appInsightsConnectionString = 'InstrumentationKey=8a3b2dce-de89-4948-a943-f70ac9e8c0bb;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=7dcfa1bf-e4cb-4927-9d1a-942fba4cf458'
+param containerImage = 'containerjobtstacr.azurecr.io/manualexample:latest'
+param containerRegistryServer = 'containerjobtstacr.azurecr.io'
+param managedIdentityName = 'containerjobtst-id'
+
+//param containerAppsEnvironmentId = $ContainerAppsEnvironmentId
+//param appInsightsConnectionString = $AppInsightsConnectionString
+param containerAppsEnvironmentId = '<REPLACE_WITH_CONTAINERAPPS_ENVIRONMENT_ID>'
+param appInsightsConnectionString = '<REPLACE_WITH_APPINSIGHTS_CONNECTION_STRING>'

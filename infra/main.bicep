@@ -19,6 +19,9 @@ param managedIdentityResourceId string
 @description('Cron expression for the scheduled job (e.g. "0 0 * * *" for daily at midnight UTC)')
 param scheduledJobCron string = '0 0 * * *'
 
+@description('Tags to apply to the resources')
+param environmentTags object
+
 // ── Log Analytics Workspace ──────────────────────────────────────────────────
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: '${appName}-law'

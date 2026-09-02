@@ -1,10 +1,7 @@
 using './acr.bicep'
+extends './dev-defaults.bicepparam'
 
-param location = 'canadacentral'
-param acrResourceGroup = 'containerjobexampleacr-rg'
-param acrName = 'containerjobexampleacr'
+param appName = 'containerjobtst'
+// Only require a Basic SKU for this configuration
 param acrSku = 'Basic'
-param tagValues = {
-  Department: 'NRC-CNRC'
-  Environment: 'Development'
-}
+
