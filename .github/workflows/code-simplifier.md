@@ -31,7 +31,8 @@ tools:
 timeout-minutes: 30
 strict: true
 source: LIKE10/aks-job-runner/.github/workflows/code-simplifier.md@fb4e59ff7ec64a5529d7af509f5d8f64080b16a5
-engine: copilot
+engine:
+  id: copilot
 ---
 
 <!-- This prompt will be imported in the agentic workflow .github/workflows/code-simplifier.md at runtime. -->

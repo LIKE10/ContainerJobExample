@@ -13,6 +13,10 @@ permissions:
 
 network:
   allowed: [defaults]
+  
+engine:
+  id: copilot
+  
 tools:
   github:
     toolsets: [default]
