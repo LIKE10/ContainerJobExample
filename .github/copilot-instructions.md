@@ -4,7 +4,7 @@
 
 ```bash
 # Build the entire solution
-dotnet build ContainerJobExample.sln
+dotnet build ContainerJobExample.slnx
 
 # Run a specific project locally
 dotnet run --project src/ManualExample/ManualExample.csproj
@@ -23,7 +23,7 @@ az bicep lint --file infra/main.bicep
 az bicep build --file infra/main.bicep
 ```
 
-Bicep lint and build also run automatically on push/PR when files under `infra/` change (`.github/workflows/validate-bicep.yml`).
+Bicep lint and build also run automatically on push/PR when files under `infra/` change (`.github/workflows/validate-bicep.yml`), which validates `infra/acr.bicep`, `infra/main.bicep`, `infra/prereqs.bicep`, and `infra/container-job.bicep`.
 
 ## Architecture
 
