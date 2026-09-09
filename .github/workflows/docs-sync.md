@@ -25,6 +25,7 @@ safe-outputs:
     max: 1
     allowed-files:
     - .github/copilot-instructions.md
+    - README.md
   noop:
 
 
