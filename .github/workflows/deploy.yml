@@ -165,7 +165,9 @@ jobs:
             --parameters containerImage='${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}' \
             --parameters jobName='manualcontainer-job' \
             --parameters containerName='manualcontainer' \
-            --parameters managedIdentityName='containerjobexampler-id'
+            --parameters managedIdentityName='containerjobexampler-id' \
+            --parameters containerAppsEnvironmentId='${{ secrets.CONTAINER_APPS_ENVIRONMENT_ID }}' \
+            --parameters appInsightsConnectionString='${{ secrets.APP_INSIGHTS_CONNECTION_STRING }}'
 
           az deployment group create --resource-group '${{ secrets.AZURE_RESOURCE_GROUP }}' \
             --template-file infra/container-job.bicep \
@@ -174,7 +176,10 @@ jobs:
             --parameters triggerType='Schedule' \
             --parameters jobName='scheduledcontainer-job' \
             --parameters containerName='scheduledcontainer' \
-            --parameters managedIdentityName='containerjobexampler-id'
+            --parameters managedIdentityName='containerjobexampler-id' \
+            --parameters containerAppsEnvironmentId='${{ secrets.CONTAINER_APPS_ENVIRONMENT_ID }}' \
+            --parameters appInsightsConnectionString='${{ secrets.APP_INSIGHTS_CONNECTION_STRING }}'
+
 
       - name: Update ManualExample Container App Job image
         run: |
