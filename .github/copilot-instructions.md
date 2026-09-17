@@ -10,9 +10,9 @@ dotnet build ContainerJobExample.sln
 dotnet run --project src/ManualExample/ManualExample.csproj
 dotnet run --project src/ScheduledExample/ScheduledExample.csproj
 
-# Docker builds (run from repo root)
-docker build --tag manualexample:local --file src/ManualExample/Dockerfile .
-docker build --tag scheduledexample:local --file src/ScheduledExample/Dockerfile .
+# Docker builds (each Dockerfile expects its own project folder as the build context)
+docker build --tag manualexample:local --file src/ManualExample/Dockerfile src/ManualExample
+docker build --tag scheduledexample:local --file src/ScheduledExample/Dockerfile src/ScheduledExample
 ```
 
 There are no tests configured in this repository.

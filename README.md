@@ -19,12 +19,14 @@ ContainerJobExample/
 ├── src/
 │   ├── ManualExample/
 │   │   ├── ManualExample.csproj     # .NET 10 Worker Service project
-│   │   ├── Dockerfile               # Multi-stage Docker build for ManualExample
+│   │   ├── Dockerfile               # Multi-stage Docker build for ManualExample (build context: src/ManualExample)
+│   │   ├── .dockerignore            # Excludes bin/ and obj/ from the Docker build context
 │   │   ├── Program.cs               # Host setup with Serilog + Application Insights
 │   │   └── Worker.cs                # BackgroundService that runs the manual job logic
 │   └── ScheduledExample/
 │       ├── ScheduledExample.csproj  # .NET 10 Worker Service project
-│       ├── Dockerfile               # Multi-stage Docker build for ScheduledExample
+│       ├── Dockerfile               # Multi-stage Docker build for ScheduledExample (build context: src/ScheduledExample)
+│       ├── .dockerignore            # Excludes bin/ and obj/ from the Docker build context
 │       ├── Program.cs               # Host setup with Serilog + Application Insights
 │       └── Worker.cs                # BackgroundService that runs the scheduled job logic
 └── .github/
@@ -117,15 +119,19 @@ dotnet run --project src/ScheduledExample/ScheduledExample.csproj
 
 ### Build & run the Docker images locally
 
+Each Dockerfile copies its project file first (for layer caching), so the build context must be the project's own folder — not the repo root.
+
 ```bash
 # ManualExample
-docker build --tag manualexample:local --file src/ManualExample/Dockerfile .
+docker build --tag manualexample:local --file src/ManualExample/Dockerfile src/ManualExample
 docker run --rm manualexample:local
 
 # ScheduledExample
-docker build --tag scheduledexample:local --file src/ScheduledExample/Dockerfile .
+docker build --tag scheduledexample:local --file src/ScheduledExample/Dockerfile src/ScheduledExample
 docker run --rm scheduledexample:local
 ```
+
+> A `.dockerignore` file in each project folder (`src/ManualExample/.dockerignore`, `src/ScheduledExample/.dockerignore`) excludes `bin/` and `obj/` from the build context to keep images small and builds fast.
 
 ---
 
@@ -184,8 +190,8 @@ az acr login --name containerjobtstacr --resource-group containerjobtstacr-rg
 
 # Build and push images
 ```powershell
-docker build -t containerjobtstacr.azurecr.io/manualexample:latest -f src/ManualExample/Dockerfile .
-docker build -t containerjobtstacr.azurecr.io/scheduledexample:latest -f src/ScheduledExample/Dockerfile .
+docker build -t containerjobtstacr.azurecr.io/manualexample:latest -f src/ManualExample/Dockerfile src/ManualExample
+docker build -t containerjobtstacr.azurecr.io/scheduledexample:latest -f src/ScheduledExample/Dockerfile src/ScheduledExample
 docker push containerjobtstacr.azurecr.io/manualexample:latest
 docker push containerjobtstacr.azurecr.io/scheduledexample:latest
 ```
