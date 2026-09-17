@@ -2,8 +2,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0-azurelinux3.0 AS build
 WORKDIR /src
 
-COPY ScheduledExampled.csproj .
-RUN dotnet ScheduledExample.csproj
+COPY ScheduledExample.csproj .
+RUN dotnet restore ScheduledExample.csproj
 
 COPY . .
 RUN dotnet publish ScheduledExample.csproj \
