@@ -165,7 +165,7 @@ jobs:
             --parameters containerImage='${{ secrets.ACR_LOGIN_SERVER }}/${{ env.MANUAL_IMAGE_NAME }}:${{ needs.containerize.outputs.image_tag }}' \
             --parameters jobName='manualcontainer-job' \
             --parameters containerName='manualcontainer' \
-            --parameters managedIdentityName='containerjobexampler-id'
+            --parameters managedIdentityName='containerjobexampler-id' \
             --parameters containerAppsEnvironmentId='${{ secrets.CONTAINER_APPS_ENVIRONMENT_ID }}' \
             --parameters appInsightsConnectionString='${{ secrets.APP_INSIGHTS_CONNECTION_STRING }}'
 
