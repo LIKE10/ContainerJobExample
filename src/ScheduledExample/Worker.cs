@@ -21,8 +21,7 @@ public class Worker : BackgroundService
         try
         {
             _logger.LogInformation("Scheduled job started. ExecutionId: {ExecutionId}, Time: {Time}", executionId, DateTimeOffset.UtcNow);
-            _logger.LogInformation("Running scheduled job as identity: {0}", Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"));
-
+            _logger.LogInformation("Running scheduled job as identity: {ClientId}", Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"));
 
             await DoWorkAsync(stoppingToken);
 
