@@ -15,7 +15,12 @@ A collection of .NET Worker Services packaged as Docker containers and deployed 
 ContainerJobExample/
 ├── infra/
 │   ├── main.bicep                   # Bicep template – Log Analytics, App Insights, Container Apps Env, both Jobs
-│   └── main.bicepparam              # Default parameter values (region, app name)
+│   ├── main.bicepparam              # Default parameter values (region, app name)
+│   ├── acr.bicep / acr.bicepparam   # Subscription-scope: Azure Container Registry foundation
+│   ├── prereqs.bicep / prereqs.bicepparam   # Subscription-scope: managed identity, ACR role assignment, shared resources
+│   ├── container-job.bicep / container-job.bicepparam  # Resource-group scope: deploy/update a single Container App Job
+│   ├── global.bicepparam, dev-defaults.bicepparam, prod-defaults.bicepparam  # Shared/environment-specific tag defaults
+│   └── modules/                     # Reusable Bicep modules (container-app-job, container-registry, prereqs-*)
 ├── src/
 │   ├── ManualExample/
 │   │   ├── ManualExample.csproj     # .NET 10 Worker Service project
@@ -29,8 +34,11 @@ ContainerJobExample/
 │       └── Worker.cs                # BackgroundService that runs the scheduled job logic
 └── .github/
     └── workflows/
-        └── deploy.yml               # CI/CD: build → containerize → deploy (both examples)
+        ├── deploy.yml               # CI/CD: build → containerize → deploy (both examples)
+        └── validate-bicep.yml       # Lints and builds all infra/*.bicep templates on push/PR
 ```
+
+See [DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md) and [deploymentartifacts.md](deploymentartifacts.md) for details on the `acr.bicep` / `prereqs.bicep` / `container-job.bicep` deployment flow.
 
 ---
 
@@ -93,13 +101,14 @@ Configure the following secrets in **Settings → Secrets and variables → Acti
 
 | Secret | Description |
 |--------|-------------|
-| `AZURE_CREDENTIALS` | JSON service-principal credentials for `azure/login` |
+| `AZURE_CLIENT_ID` | Client ID of the Azure AD app/service principal used for OIDC login (`azure/login`) |
+| `AZURE_TENANT_ID` | Azure AD tenant ID for OIDC login |
+| `AZURE_SUBSCRIPTION_ID` | Target Azure subscription ID |
 | `AZURE_RESOURCE_GROUP` | Target resource group name |
-| `AZURE_LOCATION` | Azure region (e.g. `canadacentral`) |
-| `APP_NAME` | Application base name (must match `appName` in the param file) |
 | `ACR_NAME` | ACR resource name (without `.azurecr.io`) |
 | `ACR_LOGIN_SERVER` | ACR login server, e.g. `myacr.azurecr.io` |
-| `MANAGED_IDENTITY_RESOURCE_ID` | Full resource ID of the user-assigned managed identity used for ACR authentication |
+| `CONTAINER_APPS_ENVIRONMENT_ID` | Resource ID of the existing Container Apps Environment |
+| `APP_INSIGHTS_CONNECTION_STRING` | Application Insights connection string injected into the jobs |
 
 ---
 
@@ -171,7 +180,7 @@ The workflow at `.github/workflows/deploy.yml` is triggered manually (`workflow_
 
 1. **Build** – restores and publishes both .NET projects, uploads the artifacts.
 2. **Containerize** – builds Docker images for both examples (tagged with the GitHub run ID) and saves them as artifacts.
-3. **Deploy** – logs in to Azure and ACR, pushes both images, deploys the Bicep template, then updates both Container App Jobs to use the new images.
+3. **Deploy** – logs in to Azure via OIDC (`azure/login`) and ACR, pushes both images, deploys `infra/container-job.bicep` once per job (manual and scheduled), then updates both Container App Jobs to use the new images.
 
 ---
 

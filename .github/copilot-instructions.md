@@ -18,9 +18,11 @@ docker build --tag scheduledexample:local --file src/ScheduledExample/Dockerfile
 There are no tests configured in this repository.
 
 ```bash
-# Validate Bicep templates locally
+# Validate Bicep templates locally (same files linted/built in CI)
+az bicep lint --file infra/acr.bicep
 az bicep lint --file infra/main.bicep
-az bicep build --file infra/main.bicep
+az bicep lint --file infra/prereqs.bicep
+az bicep lint --file infra/container-job.bicep
 ```
 
 Bicep lint and build also run automatically on push/PR when files under `infra/` change (`.github/workflows/validate-bicep.yml`).
@@ -31,9 +33,9 @@ This repo contains .NET 10 Worker Services that run as **Azure Container Apps Jo
 
 Each job follows this flow: `Program.cs` configures the host → registers a `Worker` as a `BackgroundService` → `Worker.ExecuteAsync` runs the job logic → calls `IHostApplicationLifetime.StopApplication()` to terminate the container.
 
-**Infrastructure** is defined in `infra/main.bicep` and provisions: Log Analytics → Application Insights → Container Apps Environment → two Container App Jobs (manual-trigger and cron-schedule). A pre-existing user-assigned managed identity with `acrPull` is required for ACR authentication.
+**Infrastructure** is defined across several Bicep templates in `infra/`: `acr.bicep` (Container Registry, subscription scope), `prereqs.bicep` (managed identity, Log Analytics, Application Insights, Container Apps Environment, subscription scope), and `container-job.bicep` (a single Container App Job, resource-group scope; deployed once per job). `infra/main.bicep` is a combined template provisioning Log Analytics → Application Insights → Container Apps Environment → both Container App Jobs in one deployment. A pre-existing user-assigned managed identity with `acrPull` is required for ACR authentication. See `DEPLOYMENT-GUIDE.md` for the full deployment flow.
 
-**CI/CD** (`.github/workflows/deploy.yml`) is manual-dispatch only and runs: Build → Containerize (tagged with GitHub run ID) → Deploy to Azure.
+**CI/CD** (`.github/workflows/deploy.yml`) is manual-dispatch only and runs: Build → Containerize (tagged with GitHub run ID) → Deploy to Azure via OIDC login, deploying `infra/container-job.bicep` once per job (manual and scheduled).
 
 ## Conventions
 
@@ -55,5 +57,5 @@ All projects use **Serilog** with two sinks: Console and Application Insights. U
 3. Copy the `Program.cs` host setup pattern (App Insights + Serilog configuration)
 4. Implement a `Worker : BackgroundService` following the try/catch/finally pattern above
 5. Add a `Dockerfile` in the new project folder under `src/<JobName>/` (multi-stage: sdk build → aspnet runtime)
-6. Add the corresponding Container App Job resource in `infra/main.bicep`
+6. Add the corresponding Container App Job resource in `infra/main.bicep` (and/or add a `container-job.bicep` deployment step for it)
 7. Update `.github/workflows/deploy.yml` to build, containerize, and deploy the new job
