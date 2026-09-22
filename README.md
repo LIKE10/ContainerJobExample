@@ -93,13 +93,14 @@ Configure the following secrets in **Settings → Secrets and variables → Acti
 
 | Secret | Description |
 |--------|-------------|
-| `AZURE_CREDENTIALS` | JSON service-principal credentials for `azure/login` |
-| `AZURE_RESOURCE_GROUP` | Target resource group name |
-| `AZURE_LOCATION` | Azure region (e.g. `canadacentral`) |
-| `APP_NAME` | Application base name (must match `appName` in the param file) |
-| `ACR_NAME` | ACR resource name (without `.azurecr.io`) |
+| `AZURE_CLIENT_ID` | Client ID of the service principal/app registration used for OIDC login via `azure/login@v2` |
+| `AZURE_TENANT_ID` | Azure AD tenant ID used for OIDC login |
+| `AZURE_SUBSCRIPTION_ID` | Target Azure subscription ID used for OIDC login |
+| `AZURE_RESOURCE_GROUP` | Target resource group name for Bicep deployments and Container App Job updates |
+| `ACR_NAME` | ACR resource name (without `.azurecr.io`), used for `az acr login` |
 | `ACR_LOGIN_SERVER` | ACR login server, e.g. `myacr.azurecr.io` |
-| `MANAGED_IDENTITY_RESOURCE_ID` | Full resource ID of the user-assigned managed identity used for ACR authentication |
+| `CONTAINER_APPS_ENVIRONMENT_ID` | Full resource ID of the existing Container Apps Environment |
+| `APP_INSIGHTS_CONNECTION_STRING` | Application Insights connection string injected into the container jobs |
 
 ---
 
