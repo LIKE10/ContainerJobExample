@@ -4,7 +4,7 @@
 
 ```bash
 # Build the entire solution
-dotnet build ContainerJobExample.sln
+dotnet build ContainerJobExample.slnx
 
 # Run a specific project locally
 dotnet run --project src/ManualExample/ManualExample.csproj
@@ -51,7 +51,7 @@ All projects use **Serilog** with two sinks: Console and Application Insights. U
 
 ### Adding a new job
 1. Create a new project under `src/` using `Microsoft.NET.Sdk.Worker` targeting `net10.0`
-2. Add the same three NuGet packages: `Microsoft.ApplicationInsights.WorkerService`, `Serilog.AspNetCore`, `Serilog.Sinks.ApplicationInsights`
+2. Add the same NuGet packages: `Azure.Identity`, `Microsoft.ApplicationInsights.WorkerService`, `Serilog.AspNetCore`, `Serilog.Sinks.ApplicationInsights`
 3. Copy the `Program.cs` host setup pattern (App Insights + Serilog configuration)
 4. Implement a `Worker : BackgroundService` following the try/catch/finally pattern above
 5. Add a `Dockerfile` in the new project folder under `src/<JobName>/` (multi-stage: sdk build → aspnet runtime)
