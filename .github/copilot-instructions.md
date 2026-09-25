@@ -4,7 +4,7 @@
 
 ```bash
 # Build the entire solution
-dotnet build ContainerJobExample.sln
+dotnet build ContainerJobExample.slnx
 
 # Run a specific project locally
 dotnet run --project src/ManualExample/ManualExample.csproj
