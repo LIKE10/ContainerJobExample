@@ -9,6 +9,13 @@ infra:
 # Container App Jobs aren't an azd service host, so images are built
 # and rolled out to the jobs in the postprovision hook.
 hooks:
+  preprovision:
+    posix:
+      shell: sh
+      run: scripts/hooks/preprovision.sh
+    windows:
+      shell: pwsh
+      run: scripts/hooks/preprovision.ps1
   postprovision:
     posix:
       shell: sh

@@ -4,6 +4,8 @@
 #   appName                 base name (e.g. containerjobexample)
 trigger: none
 
+pr: none
+
 parameters:
   - name: imageTag
     displayName: Image tag to deploy
@@ -29,6 +31,7 @@ stages:
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
+                set -euo pipefail
                 for f in acr prereqs container-job; do
                   az bicep lint --file infra/$f.bicep
                   az bicep build --file infra/$f.bicep --stdout >/dev/null
@@ -51,6 +54,7 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
+                      set -euo pipefail
                       az deployment sub create --name acr-$(Build.BuildId) --location $(location) \
                         --template-file infra/acr.bicep --parameters infra/acr.bicepparam \
                         --parameters appName=$(appName) location=$(location)
@@ -90,6 +94,7 @@ stages:
                           --parameters infra/container-job.bicepparam \
                           --parameters jobName="$1" containerName="$2" containerImage="$3" \
                             triggerType="$4" containerRegistryServer="$ACR_SERVER" \
+                            location="$(location)" \
                             managedIdentityName=$(appName)-id containerAppsEnvironmentId="$ENV_ID" \
                             appInsightsConnectionString="$APPINSIGHTS_CS"
                       }
