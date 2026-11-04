@@ -1,0 +1,46 @@
+# Builds and pushes job images to ACR whenever their source changes on main.
+# Pipeline variables required:
+#   azureServiceConnection  Azure Resource Manager service connection name
+#   acrName                 Azure Container Registry name (without .azurecr.io)
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - src/ManualExample/*
+      - src/ScheduledExample/*
+      - pipelines/build-push-images.yml
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  imageTag: $(Build.BuildId)
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildAndPush
+        strategy:
+          matrix:
+            manual:
+              imageName: manualexample
+              contextPath: src/ManualExample
+            scheduled:
+              imageName: scheduledexample
+              contextPath: src/ScheduledExample
+        steps:
+          - task: AzureCLI@2
+            displayName: Build and push $(imageName) with ACR Tasks
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az acr build --registry $(acrName) \
+                  --image $(imageName):$(imageTag) \
+                  --image $(imageName):latest \
+                  $(contextPath)
