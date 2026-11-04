@@ -1,0 +1,100 @@
+# Deploys all resources: ACR -> prerequisites -> container jobs (using an existing image tag).
+# Pipeline variables (or a variable group) required:
+#   azureServiceConnection  Azure Resource Manager service connection name
+#   appName                 base name (e.g. containerjobexample)
+trigger: none
+
+parameters:
+  - name: imageTag
+    displayName: Image tag to deploy
+    type: string
+    default: latest
+
+variables:
+  - name: location
+    value: canadacentral
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Validate
+    jobs:
+      - job: Bicep
+        steps:
+          - task: AzureCLI@2
+            displayName: Lint and build Bicep
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                for f in acr prereqs container-job; do
+                  az bicep lint --file infra/$f.bicep
+                  az bicep build --file infra/$f.bicep --stdout >/dev/null
+                done
+
+  - stage: Platform
+    dependsOn: Validate
+    jobs:
+      - deployment: Infra
+        environment: production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: AzureCLI@2
+                  displayName: Deploy ACR and prerequisites
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az deployment sub create --name acr-$(Build.BuildId) --location $(location) \
+                        --template-file infra/acr.bicep --parameters infra/acr.bicepparam \
+                        --parameters appName=$(appName) location=$(location)
+                      az deployment sub create --name prereqs-$(Build.BuildId) --location $(location) \
+                        --template-file infra/prereqs.bicep --parameters infra/prereqs.bicepparam \
+                        --parameters appName=$(appName) location=$(location)
+
+  - stage: Jobs
+    dependsOn: Platform
+    jobs:
+      - deployment: ContainerJobs
+        environment: production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: AzureCLI@2
+                  displayName: Deploy container jobs
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      APP_RG=$(appName)-rg
+                      ACR_SERVER=$(az acr show --name $(appName)acr --query loginServer -o tsv)
+                      APPINSIGHTS_CS=$(az deployment sub show --name prereqs-$(Build.BuildId) \
+                        --query properties.outputs.appInsightsConnectionString.value -o tsv)
+                      ENV_ID=$(az containerapp env show --name $(appName)-env \
+                        --resource-group $APP_RG --query id -o tsv)
+
+                      deploy_job() { # jobName containerName image triggerType
+                        az deployment group create --name "job-$1-$(Build.BuildId)" \
+                          --resource-group $APP_RG \
+                          --template-file infra/container-job.bicep \
+                          --parameters infra/container-job.bicepparam \
+                          --parameters jobName="$1" containerName="$2" containerImage="$3" \
+                            triggerType="$4" containerRegistryServer="$ACR_SERVER" \
+                            managedIdentityName=$(appName)-id containerAppsEnvironmentId="$ENV_ID" \
+                            appInsightsConnectionString="$APPINSIGHTS_CS"
+                      }
+
+                      deploy_job $(appName)-manual-job manualexample \
+                        "$ACR_SERVER/manualexample:${{ parameters.imageTag }}" Manual
+                      deploy_job $(appName)-scheduled-job scheduledexample \
+                        "$ACR_SERVER/scheduledexample:${{ parameters.imageTag }}" Schedule
